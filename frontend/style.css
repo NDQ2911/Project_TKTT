@@ -1,0 +1,66 @@
+body {
+    background: #f6f8fa;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    max-width: 500px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 32px 24px;
+}
+h2 {
+    text-align: center;
+    color: #333;
+}
+#query, #fileInput {
+    width: 80%;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-right: 8px;
+    font-size: 16px;
+}
+#query {
+    margin-bottom: 12px;
+    margin-right: 12px;
+}
+button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    background: #1976d2;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+button:hover {
+    background: #1565c0;
+}
+#result > div {
+    background: #f1f1f1;
+    border-radius: 6px;
+    margin: 8px 0;
+    padding: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+h3 {
+    margin-top: 24px;
+    color: #444;
+}
+#uploadForm {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+}
+#status {
+    margin-top: 24px;
+    text-align: center;
+    color: #1976d2;
+    font-size: 16px;
+}
