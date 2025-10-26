@@ -1,0 +1,13 @@
+#kiểm tra dữ liệu trong docs
+GET http://localhost:9200/docs/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  },
+  "size": 20
+}
+
+###
+GET http://localhost:9200/_cat/indices?v

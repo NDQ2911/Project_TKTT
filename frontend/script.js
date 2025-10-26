@@ -22,12 +22,14 @@ async function search() {
             return;
         }
 
+        console.log("Kết quả trả về từ server:", data);
+
         data.forEach(doc => {
             const div = document.createElement("div");
             div.style.border = "1px solid #ccc";
             div.style.margin = "5px";
             div.style.padding = "5px";
-            div.innerHTML = `<strong>${doc._source.title}</strong><br>${doc._source.content}`;
+            div.innerHTML = `<strong>${doc._source.title}</strong><br>${doc._source.content || ""}`;
             resultDiv.appendChild(div);
         });
 
@@ -40,29 +42,48 @@ async function search() {
 // Hàm upload, dùng cho upload.html
 document.addEventListener("DOMContentLoaded", () => {
     const uploadForm = document.getElementById("uploadForm");
+    const statusDiv = document.getElementById("status");
     if (!uploadForm) return;
 
     uploadForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const fileInput = document.getElementById("fileInput");
         if (!fileInput.files[0]) {
-            alert("Chọn file trước khi upload!");
+            statusDiv.innerText = "Vui lòng chọn file trước khi upload!";
+            statusDiv.style.color = "red";
             return;
         }
 
+        const file = fileInput.files[0];
         const formData = new FormData();
-        formData.append("file", fileInput.files[0]);
+        formData.append("file", file);
+
+        // Hiển thị trạng thái đang upload
+        statusDiv.innerText = `Đang upload file "${file.name}"...`;
+        statusDiv.style.color = "black";
 
         try {
             const response = await fetch("http://localhost:3000/upload", {
                 method: "POST",
                 body: formData
             });
+
             const data = await response.json();
-            document.getElementById("status").innerText = data.status ? `Indexed ${data.indexed} docs` : data.error;
+
+            if (data.status === "ok") {
+                statusDiv.innerText = `Upload thành công! Đã thêm ${data.indexed} bản ghi.`;
+                statusDiv.style.color = "green";
+            } else if (data.error) {
+                statusDiv.innerText = `Upload thất bại: ${data.error}`;
+                statusDiv.style.color = "red";
+            } else {
+                statusDiv.innerText = "Upload thất bại: Lỗi không xác định.";
+                statusDiv.style.color = "red";
+            }
         } catch (err) {
             console.error(err);
-            alert("Có lỗi xảy ra khi upload!");
+            statusDiv.innerText = `Upload thất bại: ${err.message}`;
+            statusDiv.style.color = "red";
         }
     });
 });
