@@ -43,5 +43,4 @@ temp/
 .cache/
 
 # Bỏ qua file trong thư mục backend
-backend/package.json
 backend/package-lock.json
