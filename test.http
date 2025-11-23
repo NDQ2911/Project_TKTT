@@ -11,3 +11,182 @@ Content-Type: application/json
 
 ###
 GET http://localhost:9200/_cat/indices?v
+
+###chuyển sang dùng tf-idf similarity
+PUT /docs
+{
+  "settings": {
+    "similarity": {
+      "my_tf_idf": {
+        "type": "classic"
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "similarity": "my_tf_idf"
+      }
+    }
+  }
+}
+
+### tạo index
+PUT http://localhost:9200/docs
+Content-Type: application/json
+
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "vietnamese_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": { "type": "integer" },
+      "title": { "type": "text", "analyzer": "vietnamese_analyzer" },
+      "authors": { "type": "text", "analyzer": "vietnamese_analyzer" },
+      "category": { "type": "text", "analyzer": "vietnamese_analyzer" },
+      "pages": { "type": "integer" },
+      "manufacturer": { "type": "text", "analyzer": "vietnamese_analyzer" }
+    }
+  }
+}
+
+###
+PUT http://localhost:9200/bknews
+Content-Type: application/json
+
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "similarity": {
+      "my_bm25": {
+        "type": "BM25",
+        "b": 0.8,
+        "k1": 1
+      }
+    },
+    "analysis": {
+      "analyzer": {
+        "vietnamese_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": { "type": "integer" },
+      "title": {
+        "type": "text",
+        "analyzer": "vietnamese_analyzer",
+        "fields": {
+          "vsm": { "type": "text", "analyzer": "vietnamese_analyzer", "similarity": "classic" },
+          "bm25": { "type": "text", "analyzer": "vietnamese_analyzer", "similarity": "my_bm25" }
+        }
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "vietnamese_analyzer",
+        "fields": {
+          "vsm": { "type": "text", "analyzer": "vietnamese_analyzer", "similarity": "classic" },
+          "bm25": { "type": "text", "analyzer": "vietnamese_analyzer", "similarity": "my_bm25" }
+        }
+      }
+    }
+  }
+}
+
+
+###thêm dữ liệu
+POST http://localhost:9200/docs/_bulk
+Content-Type: application/x-ndjson
+
+{ "index": { "_id": 1 } }
+{ "product_id": "74021317", "title": "Cây Cam Ngọt Của Tôi", "authors": "José Mauro de Vasconcelos", "category": "Tiểu Thuyết", "pages": 244, "manufacturer": "Nhà Xuất Bản Hội Nhà Văn" }
+{ "index": { "_id": 2 } }
+{ "product_id": "184466860", "title": "Hành Tinh Của Một Kẻ Nghĩ Nhiều", "authors": "Nguyễn Đoàn Minh Thư", "category": "Sách tư duy - Kỹ năng sống", "pages": 184, "manufacturer": "Nhà Xuất Bản Thế Giới" }
+{ "index": { "_id": 3 } }
+{ "product_id": "73787185", "title": "Những Tù Nhân Của Địa Lý", "authors": "Tim Marshall", "category": "Lĩnh vực khác", "pages": 430, "manufacturer": "Nhà Xuất Bản Hội Nhà Văn" }
+{ "index": { "_id": 4 } }
+{ "product_id": "52789367", "title": "Nhà Giả Kim (Tái Bản 2020)", "authors": "Paulo Coelho", "category": "Tác phẩm kinh điển", "pages": 228, "manufacturer": "Nhà Xuất Bản Hà Nội" }
+{ "index": { "_id": 5 } }
+{ "product_id": "147920903", "title": "Một Thoáng Ta Rực Rỡ Ở Nhân Gian", "authors": "", "category": "Tiểu Thuyết", "pages": 304, "manufacturer": "Nhà Xuất Bản Hội Nhà Văn" }
+{ "index": { "_id": 6 } }
+{ "product_id": "3304875", "title": "Điều Kỳ Diệu Của Tiệm Tạp Hóa NAMIYA (Tái Bản)", "authors": "Higashino Keigo", "category": "Truyện ngắn - Tản văn - Tạp Văn", "pages": 358, "manufacturer": "" }
+
+###
+POST http://localhost:9200/bknews/_bulk
+Content-Type: application/x-ndjson
+
+{ "index": { "_id": 1 } }
+{ "id": 1, "title": "Ky uc gui lai tu chien truong: Nhung ky vat cua nguoi linh sinh vien Bach khoa", "content": "Mot chiec ang-go nhom da xin mau theo nam thang, mot chiec may anh cu, cuon 'Nhat ky Ham Rong' o vang cung nhung trang viet tay da son mep... Do la nhung ky vat ma cuu chien binh – cuu sinh vien Tran Minh Chinh (sinh nam 1952, khoa 14 khoa Vo tuyen dien, Dai hoc Bach khoa Ha Noi) tran trong gui tang Trung tam Truyen thong va Tri thuc so, Dai hoc Bach khoa Ha Noi ngay 26/8/2025, nhan ky niem 55 nam ngay ong nhap ngu." }
+{ "index": { "_id": 2 } }
+{ "id": 2, "title": "Thong bao ve ke hoach day va hoc trong thoi gian anh huong cua Bao Matmo (Bao so 11)", "content": "Do anh huong cua bao Matmo (bao so 11), du bao khu vuc Ha Noi se co mua lon trong hai ngay 06-07/10/2025. De han che gian doan hoat dong giang day va dam bao an toan cho can bo, giang vien va nguoi hoc, DHBK Ha Noi thong bao ke hoach nhu sau: Buoi sang thu Hai, ngay 06/10/2025: Day va hoc truc tiep binh thuong theo thoi khoa bieu. Chu y: Trong truong hop thoi tiet dien bien nhanh, gay kho khan di chuyen: Giang vien co the linh hoat chuyen sang hinh thuc hoc truc tuyen va thong bao cho sinh vien; Nguoi hoc chu dong lien he giang vien de duoc ho tro. Buoi chieu thu Hai (06/10) va ca ngay thu Ba (07/10): Ke hoach se duoc cap nhat va thong bao truoc moi buoi hoc, can cu tinh hinh thuc te." }
+{ "index": { "_id": 3 } }
+{ "id": 3, "title": "Nhung khoanh khac dang nho trong mua le tot nghiep Bach khoa 2025", "content": "Trong hai ngay cuoi tuan (4-5/10), khong khi tai Dai hoc Bach khoa Ha Noi ron rang va ruc ro sac hoa khi 3.768 sinh vien khoac len minh tam ao cu nhan, ky su, du le tot nghiep trong niem han hoan va nhung trang phao tay chuc mung nong nhiet tu thay co, cha me va ban be. 'Mot khi da la Nguoi Bach khoa – mai mai la Nguoi Bach khoa!'" }
+{ "index": { "_id": 4 } }
+{ "id": 4, "title": "Thư mời tham dự chương trình “Bách khoa Ngày trở về 2025” - 10 năm thành lập mạng lưới CSV Đại học Bách khoa Hà Nội", "content": "Kính gửi: \nCác Thầy, Cô là cán bộ, cựu cán bộ của Đại học Bách khoa Hà Nội,\nCác anh, chị cựu học viên, cựu sinh viên của Đại học Bách khoa Hà Nội. \nNhân dịp 69 năm ngày thành lập Trường Đại học Bách khoa Hà Nội và 10 năm  ngày thành lập Mạng lưới Cựu sinh viên, chuỗi sự kiện “Bách Khoa Ngày trở về 2025” sẽ được tổ chức từ 20/9 đến 25/10/2025, với Lễ Kỷ niệm và Nhạc hội chính diễn ra vào Thứ Bảy, ngày 25/10/2025." }
+{ "index": { "_id": 5 } }
+{ "id": 5, "title": "Phân hiệu Đại học Bách khoa Hà Nội tại Hưng Yên: Mảnh ghép quan trọng cho khát vọng lớn", "content": "Ngày 25/3/2025, Thủ tướng Chính phủ đã ban hành Quyết định số 663/QĐ-TTg, phê duyệt Đề án Phát triển Đại học Bách khoa Hà Nội thuộc nhóm cơ sở giáo dục đại học hàng đầu châu Á. Trong bức tranh chiến lược này, dự án Cơ sở 2 - Phân hiệu Đại học Bách khoa Hà Nội tại Hưng Yên được xác định là một mảnh ghép quan trọng - như một hạ tầng chiến lược nhằm mở rộng không gian đào tạo, nghiên cứu và đổi mới sáng tạo của Đại học." }
+{ "index": { "_id": 6 } }
+{ "id": 6, "title": "Khảo sát 10 sản phẩm tiêu biểu về thiết kế logo 70 năm Đại học Bách khoa Hà Nội", "content": "Cuộc thi thiết kế Logo kỷ niệm 70 năm thành lập Đại học Bách khoa Hà Nội (1956-2026) đã nhận được sự ủng hộ nhiệt thành và sự tham gia của đông đảo các tác giả, gửi đến hơn 100 sản phẩm dự thi.Với sự phối hợp của Trường Đại học Mỹ thuật Công nghiệp, Hội đồng Giám khảo đã chọn 10 sản phẩm tiêu biểu để khảo sát ý kiến ​​độc giả, làm một cơ sở xem xét trao giải của cuộc thi. Từ ý tưởng của các sản phẩm tiêu biểu và sự đồng thuận của các tác giả khi gửi sản phẩm dự thi, Đại học Bách khoa Hà Nội sẽ tiếp tục phối hợp với các chuyên gia để hoàn thiện và công bố logo chính thức của sự kiện kỷ niệm 70 năm." }
+{ "index": { "_id": 7 } }
+{ "id": 7, "title": "Bách khoa Hà Nội tập huấn ứng dụng AI cho hơn 300 cán bộ, giáo viên Ninh Bình", "content": "Ngày 10/10, theo đề nghị của Sở Giáo dục và Đào tạo tỉnh Ninh Bình, đoàn chuyên gia Đại học Bách khoa Hà Nội đã tham gia chương trình Tập huấn Ứng dụng trí tuệ nhân tạo (AI) trong công tác quản lý, điều hành và dạy học cho hơn 300 cán bộ quản lý giáo dục, giáo viên của ngành Giáo dục Ninh Bình. \nĐoàn chuyên gia Đại học Bách khoa Hà Nội gồm đại diện lãnh đạo Ban Tuyển sinh – Hướng nghiệp (TSHN): PGS. TS. Vũ Duy Hải – Trưởng ban, TS. Hà Mạnh Tuấn – Phó Trưởng ban, các giảng viên khoa Khoa học và Công nghệ giáo dục: TS. Vũ Đình Minh, TS. Nguyễn Thị Huyền, cùng đội ngũ cán bộ, trợ giảng,… của 2 đơn vị." }
+{ "index": { "_id": 8 } }
+{ "id": 8, "title": "Đại học Bách khoa Hà Nội với Ngày Giải phóng Thủ đô", "content": "Ngày Giải phóng Thủ đô 10/10/1954 đánh dấu bước ngoặt quan trọng, khẳng định thắng lợi hoàn toàn của quân và dân ta trong cuộc kháng chiến chống thực dân Pháp, mở ra một giai đoạn mới trong lịch sử ngàn năm văn hiến của Thăng Long-Đông Đô-Hà Nội. Nhân Kỷ niệm 71 năm Ngày Giải phóng Thủ đô, Đại học Bách khoa Hà Nội trân trọng giới thiệu bài viết \"Đại học Bách khoa Hà Nội với Ngày Giải phóng Thủ đô\" của PGS. Huỳnh Quyết Thắng - Giám đốc Đại học, như một góc nhìn tri ân thế hệ đi trước, khẳng định tinh thần người Bách khoa tiếp nối truyền thống dựng xây đất nước bằng tri thức và khát vọng đổi mới." }
+{ "index": { "_id": 9 } }
+{ "id": 9, "title": "Nam sinh Bách khoa Hà Nội tỏa sáng tại Hoa Kỳ", "content": "Mùa hè vừa qua, thay vì nghỉ ngơi bên gia đình hay đi du lịch trải nghiệm cùng bè bạn, 8 nam sinh Đại học Bách khoa Hà Nội lựa chọn tham gia chương trình trao đổi quốc tế tại Đại học Wyoming (Hoa Kỳ). \nBách khoa Hà Nội đã chuẩn bị hàng trang cho 8 sinh viên bước vào môi trường quốc tế, làm việc cùng các nhà nghiên cứu hàng đầu và đón nhận những trải nghiệm đặc trưng của miền Tây nước Mỹ. Không chỉ là một kỳ thực tập, hành trình ấy trở thành cột mốc trưởng thành về học thuật, kỹ năng và bản lĩnh hội nhập của sinh viên Bách khoa" }
+{ "index": { "_id": 10 } }
+{ "id": 10, "title": "Nhà nghiên cứu công bố lý thuyết tổng quát công nghệ truyền năng lượng không dây kể chuyện học ở Bách khoa", "content": "Năm 2023, TS. Hà Văn Nam - CSV Bách khoa K52, Điện tử Viễn thông, hiện công tác tại ĐH Aalto (Phần Lan) - cùng các đồng nghiệp và hai giáo sư ở ĐH Aalto đã công bố một lý thuyết tổng quát nhất cho công nghệ truyền năng lượng không dây. Công trình này không chỉ đóng góp về mặt học thuật mà còn mở ra nhiều hướng ứng dụng tiềm năng trong nhiều lĩnh vực như y sinh, robot, tự động…\nPhía sau thành tựu khoa học gây tiếng vang đó là những ngày tháng miệt mài học tập, những dự án sinh viên giản dị và cả sự đồng hành của thầy cô, bạn bè tại Đại học Bách khoa Hà Nội - Mái trường đã nâng đỡ những bước chân đầu tiên của nhà nghiên cứu Hà Văn Nam trên con đường học thuật." }
+{ "index": { "_id": 11 } }
+{ "id": 11, "title": "Bách khoa Hà Nội năm học mới 2025 - 2026: Dấu ấn hôm nay, khát vọng ngày mai", "content": "Sáng nay (25/9), Đại học Bách khoa Hà Nội trang trọng tổ chức Hội nghị Tổng kết các nhiệm vụ năm học 2024–2025 và triển khai nhiệm vụ trọng tâm năm học 2025–2026, khẳng định quyết tâm tiếp tục đổi mới, hội nhập và nâng cao chất lượng đào tạo.\nNăm học 2024 - 2025 khép lại với một bức tranh toàn diện từ đổi mới quản trị, phát triển đội ngũ, đến đào tạo, nghiên cứu và trách nhiệm xã hội đều ghi dấu những bước tiến vững chắc của Đại học Bách khoa Hà Nội. Báo cáo tổng kết tại Hội nghị, PGS. Nguyễn Phong Điền - Phó Giám đốc Đại học Bách khoa Hà Nội - cho biết." }
+{ "index": { "_id": 12 } }
+{ "id": 12, "title": "Đại học Bách khoa Hà Nội tham dự diễn đàn Giáo dục Đại học Việt Nam – Vương quốc Anh và gặp gỡ cộng đồng cựu sinh viên tại Vương quốc Anh", "content": "Ngày 31/10/2025 tại London (Vương quốc Anh), PGS. Huỳnh Quyết Thắng - Giám đốc Đại học Bách khoa Hà Nội (HUST) - đã tham dự Diễn đàn Giáo dục Đại học Việt Nam – Vương quốc Anh cùng đại diện Bộ giáo dục và Đào tạo, đại diện các trường đại học hàng đầu của Vương quốc Anh, Hội đồng Anh và Hội Trí thức Việt Nam tại Vương quốc Anh và Ireland (VIS)." }
+{ "index": { "_id": 13 } }
+{ "id": 13, "title": "Hai cơ sở giáo dục đại học hàng đầu Việt Nam – Hàn Quốc hợp tác phát triển giáo dục và nghiên cứu", "content": "Ngày 5/11, Đại học Bách khoa Hà Nội ký Biên bản Ghi nhớ hợp tác với Viện Khoa học Công nghệ Hàn Quốc (KIST) nhằm khuyến khích và phát triển hợp tác giữa hai đơn vị.\nCụ thể, hai bên dự định phát triển các hoạt động hợp tác liên quan đến giáo dục và nghiên cứu với các hoạt động: Trao đổi giảng viên, nhà khoa học và sinh viên; Phát triển chương trình đào tạo và bồi dưỡng nhân lực chất lượng cao; Triển khai các đề tài nghiên cứu chung và công bố học thuật quốc tế; Chia sẻ hạ tầng nghiên cứu, học liệu và thông tin khoa học; Mở rộng sang các hoạt động đổi mới sáng tạo, khởi nghiệp, chuyển giao công nghệ." }
+{ "index": { "_id": 14 } }
+{ "id": 14, "title": "Đại hội CCB Bách khoa lần thứ V: Sáng mãi ngọn lửa “Trung thành - Đoàn kết - Gương mẫu - Đổi mới”", "content": "Ngày 4/11, tại Đại học Bách khoa Hà Nội, Đại hội Hội Cựu chiến binh (CCB) lần thứ V, nhiệm kỳ 2025 – 2030 đã diễn ra trong không khí trang trọng, ấm áp nghĩa tình đồng đội. Đại hội mang chủ đề “Trung thành - Đoàn kết - Gương mẫu - Đổi mới”.\nTham dự Đại hội có: GS. Lê Anh Tuấn - Bí thư Đảng ủy, Chủ tịch HĐĐH, PGS. Bùi Đức Hùng - Chủ tịch Công đoàn Đại học, Đại tá Nguyễn Xuân Hà - Phó Chủ tịch hội CCB thành phố Hà Nội cùng đông đảo hội viên CCB đang công tác và nghỉ hưu của Đại học." }
+{ "index": { "_id": 15 } }
+{ "id": 15, "title": "Đại học Bách khoa Hà Nội xếp thứ 315 trong bảng xếp hạng QS châu Á 2026", "content": "Theo bảng xếp hạng QS World University Rankings: Asia 2026 vừa được công bố hôm nay (ngày 4/11), Đại học Bách khoa Hà Nội xếp hạng 315 toàn châu Á.\nThứ hạng của Nhà trường tăng 73 bậc so với năm 2025 (vị trí 388), vượt qua 79,4% số đại học được xếp hạng trong khu vực, khẳng định đà tăng trưởng mạnh mẽ về chất lượng đào tạo, nghiên cứu và hội nhập quốc tế." }
+
+###tìm theo VSM
+GET http://localhost:9200/bknews/_search
+Content-Type: application/json
+
+{
+  "size": 5,
+  "query": {
+    "multi_match": {
+      "query": "Bách Khoa Hà Nội",
+      "fields": ["title"],       // hoặc ["title", "content"]
+      "type": "most_fields"
+    }
+  }
+}
+
+### tìm theo BM25
+GET http://localhost:9200/bknews/_search
+Content-Type: application/json
+
+{
+  "size": 5,
+  "query": {
+    "multi_match": {
+      "query": "Bách Khoa Hà Nội",
+      "fields": ["content"],     // field dùng BM25
+      "type": "most_fields"
+    }
+  }
+}
