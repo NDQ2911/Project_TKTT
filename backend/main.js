@@ -2,56 +2,37 @@ const express = require('express');
 const multer = require('multer');
 const axios = require('axios');
 const fs = require('fs');
-const csv = require('csv-parser');
 const path = require('path');
-const cors = require('cors');
 
 const app = express();
 const PORT = 3000;
 const ES_INDEX = "docs";
 const ES_URL = `http://localhost:9200/${ES_INDEX}/_doc`;
+const INDEX_FILE = path.join(__dirname, "index.json"); // file index.json chứa body của lệnh tạo index
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(require('cors')());
 
 // Tạm lưu file upload
 const upload = multer({ dest: path.join(__dirname, '../data/') });
 
-// Tạo index nếu chưa tồn tại
+// ================= Index =================
 async function ensureIndex() {
     try {
-        await axios.put(`http://localhost:9200/${ES_INDEX}`, {
-            settings: {
-                analysis: {
-                    analyzer: {
-                        vietnamese_analyzer: {
-                            type: "custom",
-                            tokenizer: "standard",
-                            filter: ["lowercase", "asciifolding"]
-                        }
-                    }
-                }
-            },
-            mappings: {
-                properties: {
-                    id: { type: "integer" },
-                    title: { type: "text", analyzer: "vietnamese_analyzer" },
-                    authors: { type: "text", analyzer: "vietnamese_analyzer" },
-                    category: { type: "text", analyzer: "vietnamese_analyzer" },
-                    pages: { type: "integer" },
-                    manufacturer: { type: "text", analyzer: "vietnamese_analyzer" }
-                }
-            }
-        });
-        console.log("Index created");
-    } catch (e) {
-        // Nếu index đã tồn tại thì ignore
+        let indexBody = {};
+        if (fs.existsSync(INDEX_FILE)) {
+            indexBody = JSON.parse(fs.readFileSync(INDEX_FILE, 'utf-8'));
+        }
+
+        await axios.put(`http://localhost:9200/${ES_INDEX}`, indexBody);
+        console.log(`Index '${ES_INDEX}' đã được tạo hoặc cập nhật từ ${INDEX_FILE}`);
+    } catch (err) {
+        console.error("Không thể tạo index:", err.message);
     }
 }
 
-// Kiểm tra index đã tồn tại chưa
 async function indexExists() {
     try {
         await axios.get(`http://localhost:9200/${ES_INDEX}`);
@@ -61,8 +42,10 @@ async function indexExists() {
     }
 }
 
-// Gọi khi khởi động server
-ensureIndex();
+// Khởi động server
+(async () => {
+    if (!(await indexExists())) await ensureIndex();
+})();
 
 // ================= Upload =================
 app.post('/upload', upload.single('file'), async (req, res) => {
@@ -74,36 +57,22 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     let docs = [];
 
     try {
-        if (req.file.originalname.endsWith('.csv')) {
-            docs = await new Promise((resolve, reject) => {
-                const results = [];
-                fs.createReadStream(filePath)
-                    .pipe(csv())
-                    .on('data', data => {
-                        if (!data.product_id || !data.title) return; // Bỏ bản ghi thiếu product_id hoặc title
-                        if (data.pages) data.pages = parseInt(data.pages);
-                        results.push(data);
-                    })
-                    .on('end', () => resolve(results))
-                    .on('error', err => reject(err));
-            });
-        } else if (req.file.originalname.endsWith('.json')) {
+        if (req.file.originalname.endsWith('.json')) {
             docs = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-            docs = docs.filter(d => d.product_id && d.title); // Bỏ bản ghi thiếu product_id hoặc title
-            docs.forEach(d => {
-                if (d.pages) d.pages = parseInt(d.pages);
-            });
         } else {
-            return res.status(400).json({ error: "Chỉ nhận CSV hoặc JSON" });
+            return res.status(400).json({ error: "Chỉ nhận JSON" });
         }
+
+        // Lọc và chuẩn hóa dữ liệu
+        docs = docs.filter(d => d["Id tin"] && d["Tiêu đề tin"]);
 
         let indexed = 0;
         for (let doc of docs) {
             try {
-                await axios.put(`${ES_URL}/${doc.product_id}`, doc); // _id = product_id
+                await axios.put(`${ES_URL}/${doc["Id tin"]}`, doc); // _id = Id tin
                 indexed++;
             } catch (e) {
-                console.error(`Index failed product_id=${doc.product_id}:`, e.message);
+                console.error(`Index failed Id tin=${doc["Id tin"]}:`, e.message);
             }
         }
 
@@ -123,7 +92,10 @@ app.post("/search", async (req, res) => {
 
         const response = await axios.post(`http://localhost:9200/${ES_INDEX}/_search`, {
             query: {
-                multi_match: { query: q, fields: ["title^3", "authors", "category", "manufacturer"] }
+                multi_match: {
+                    query: q,
+                    fields: ["Tiêu đề tin^3", "Địa điểm tuyển dụng", "Tỉnh thành tuyển dụng", "Chức vụ", "Ngành nghề", "Lĩnh vực"]
+                }
             },
             size: 10
         });
