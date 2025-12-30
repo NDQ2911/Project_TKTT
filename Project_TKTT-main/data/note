@@ -1,0 +1,5 @@
+##check trong docs bằng curl
+curl.exe -X GET "http://localhost:9200/docs/_search?pretty" -H "Content-Type: application/json" -d "{ \"query\": { \"match_all\": {} }, \"size\": 100 }"
+
+##xóa trong CMD
+curl.exe -X DELETE "http://localhost:9200/docs"

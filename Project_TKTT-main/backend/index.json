@@ -1,0 +1,27 @@
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "vietnamese_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "Id tin": { "type": "keyword" },
+      "Tiêu đề tin": { "type": "text", "analyzer": "vietnamese_analyzer" },
+      "Địa điểm tuyển dụng": { "type": "text", "analyzer": "vietnamese_analyzer" },
+      "Tỉnh thành tuyển dụng": { "type": "text", "analyzer": "vietnamese_analyzer" },
+      "Chức vụ": { "type": "text", "analyzer": "vietnamese_analyzer" },
+      "Mức lương": { "type": "text" },
+      "Hình thức làm việc": { "type": "text" },
+      "Ngành nghề": { "type": "text" },
+      "Lĩnh vực": { "type": "text" },
+      "Kinh nghiệm": { "type": "text" }
+    }
+  }
+}
