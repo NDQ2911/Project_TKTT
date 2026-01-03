@@ -11,13 +11,6 @@ class HusteduRssSpider(scrapy.Spider):
         "RANDOMIZE_DOWNLOAD_DELAY": False,
         "CONCURRENT_REQUESTS": 1,  # request tuần tự
         "FEED_EXPORT_ENCODING": "utf-8",
-        "DEFAULT_REQUEST_HEADERS": {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/141.0.0.0 Safari/537.36"
-            )
-        }
     }
 
     def parse(self, response):

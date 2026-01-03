@@ -107,4 +107,27 @@ app.post("/search", async (req, res) => {
     }
 });
 
+// ================= Get Job by ID =================
+app.get("/job/:id", async (req, res) => {
+    try {
+        const id = req.params.id;
+        if (!id) return res.status(400).json({ error: "Missing id" });
+
+        const response = await axios.get(`http://localhost:9200/${ES_INDEX}/_doc/${id}`);
+        if (!response.data || response.data.found === false) {
+            return res.status(404).json({ error: "Not found" });
+        }
+
+        // Return the document _source
+        res.json(response.data._source);
+    } catch (err) {
+        console.error(err.response ? err.response.data : err.message);
+        // if ES returns 404 it comes here; convert to friendly 404
+        if (err.response && err.response.status === 404) {
+            return res.status(404).json({ error: "Not found" });
+        }
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.listen(PORT, () => console.log(`Backend running at http://localhost:${PORT}`));

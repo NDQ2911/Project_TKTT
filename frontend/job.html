@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Chi tiết công việc</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .job-container { max-width: 800px; margin: 20px auto; padding: 16px; border: 1px solid #ddd; }
+        .job-field { margin-bottom: 8px; }
+        .job-key { font-weight: bold; margin-right: 6px; }
+        .back { margin-bottom: 12px; display: inline-block; }
+    </style>
+</head>
+<body>
+<div class="container job-container">
+    <a class="back" href="search.html">&larr; Quay lại tìm kiếm</a>
+    <h2 id="title">Đang tải...</h2>
+    <div id="details"></div>
+</div>
+
+<script>
+    function getParam(name) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name);
+    }
+
+    async function loadJob() {
+        const id = getParam('id');
+        const titleEl = document.getElementById('title');
+        const detailsEl = document.getElementById('details');
+
+        if (!id) {
+            titleEl.innerText = 'ID không hợp lệ';
+            return;
+        }
+
+        try {
+            const resp = await fetch(`http://localhost:3000/job/${encodeURIComponent(id)}`);
+            if (resp.status === 404) {
+                titleEl.innerText = 'Không tìm thấy công việc';
+                return;
+            }
+            if (!resp.ok) throw new Error('Lỗi khi lấy dữ liệu');
+
+            const data = await resp.json();
+
+            // Try to find a good title
+            const title = data['Tiêu đề tin'] || data.title || data['Tiêu đề'] || ('Công việc ' + id);
+            titleEl.innerText = title;
+
+            detailsEl.innerHTML = '';
+            const keys = Object.keys(data);
+            if (keys.length === 0) {
+                detailsEl.innerHTML = '<p>Không có thông tin chi tiết.</p>';
+                return;
+            }
+
+            // Render fields
+            keys.forEach(k => {
+                const div = document.createElement('div');
+                div.className = 'job-field';
+                const keySpan = document.createElement('span');
+                keySpan.className = 'job-key';
+                keySpan.innerText = k + ':';
+                const valSpan = document.createElement('span');
+                let v = data[k];
+                if (typeof v === 'object') v = JSON.stringify(v);
+                valSpan.innerText = v;
+                div.appendChild(keySpan);
+                div.appendChild(valSpan);
+                detailsEl.appendChild(div);
+            });
+
+        } catch (err) {
+            console.error(err);
+            titleEl.innerText = 'Có lỗi khi tải dữ liệu';
+            detailsEl.innerHTML = '<p>Vui lòng thử lại sau.</p>';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadJob);
+</script>
+</body>
+</html>

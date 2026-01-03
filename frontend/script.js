@@ -29,7 +29,16 @@ async function search() {
             div.style.border = "1px solid #ccc";
             div.style.margin = "5px";
             div.style.padding = "5px";
-            div.innerHTML = `<strong>${doc._source.title}</strong><br>${doc._source.content || ""}`;
+
+            const title = doc._source["Tiêu đề tin"] || doc._source.title || doc._source["Tiêu đề"] || "Không có tiêu đề";
+            const a = document.createElement("a");
+            a.href = `job.html?id=${encodeURIComponent(doc._id)}`;
+            a.innerText = title;
+            a.style.fontWeight = "bold";
+            a.style.textDecoration = "none";
+            a.style.color = "#333";
+
+            div.appendChild(a);
             resultDiv.appendChild(div);
         });
 
