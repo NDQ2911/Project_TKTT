@@ -251,8 +251,7 @@ Các trường hỗ trợ sắp xếp kết quả tìm kiếm:
       "Kinh nghiệm": { 
         "type": "keyword"
       },
-      "experience_min": { "type": "integer" },
-      "experience_max": { "type": "integer" }
+      "experience_tags": { "type": "keyword" }
     }
   }
 }
@@ -519,8 +518,7 @@ async function processAndIndex(jobs) {
             ...job,
             salary_min: salary.min,
             salary_max: salary.max,
-            experience_min: experience.min,
-            experience_max: experience.max
+            experience_tags: experience.tags
         };
         
         bulkBody.push({ index: { _index: "jobs", _id: job["Id tin"] } });
@@ -543,8 +541,7 @@ async function processAndIndex(jobs) {
     "multi_match": {
       "query": "lập trình web",
       "fields": ["Tiêu đề tin^3", "Ngành nghề^2", "Lĩnh vực"],
-      "type": "best_fields",
-      "fuzziness": "AUTO"
+      "type": "best_fields"
     }
   }
 }
@@ -567,7 +564,7 @@ async function processAndIndex(jobs) {
       "filter": [
         { "term": { "Tỉnh thành tuyển dụng": "Hồ Chí Minh" } },
         { "range": { "salary_min": { "gte": 15 } } },
-        { "range": { "experience_max": { "lte": 3 } } }
+        { "terms": { "experience_tags": ["C", "D"] } }
       ]
     }
   },
