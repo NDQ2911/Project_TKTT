@@ -64,3 +64,39 @@ h3 {
     color: #1976d2;
     font-size: 16px;
 }
+
+.job-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 0px; /* Đảm bảo không có margin ngoài gây khoảng cách xa */
+    cursor: pointer;    /* Biến con trỏ thành hình bàn tay */
+    transition: all 0.2s ease; /* Hiệu ứng mượt mà */
+}
+
+.job-card:hover {
+    background-color: #f0f7ff; /* Đổi màu nền nhẹ khi di chuột vào */
+    border-color: #007bff;     /* Đổi màu viền sang xanh */
+}
+
+.job-title {
+    font-size: 1.1rem;
+    color: #007bff;
+    font-weight: bold;
+    margin-bottom: 4px;
+    /* Không cần dùng thẻ <a> ở đây nữa vì cả thẻ đã là link */
+}
+
+.job-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Ép khoảng cách giữa các card trong result thật khít */
+#result {
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* Bạn có thể chỉnh về 2px hoặc 0px nếu muốn khít hơn nữa */
+}

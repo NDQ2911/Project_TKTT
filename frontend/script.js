@@ -7,46 +7,59 @@ async function search() {
     }
 
     try {
-        const response = await fetch("http://localhost:3000/search", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ q: query })
-        });
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || 'Search failed');
+        }
 
         const data = await response.json();
         const resultDiv = document.getElementById("result");
         resultDiv.innerHTML = "";
 
-        if (!data || data.length === 0) {
+        const hits = data.hits || [];
+        if (hits.length === 0) {
             resultDiv.innerHTML = "<p>Không tìm thấy kết quả nào.</p>";
             return;
         }
 
         console.log("Kết quả trả về từ server:", data);
 
-        data.forEach(doc => {
-            const div = document.createElement("div");
-            div.style.border = "1px solid #ccc";
-            div.style.margin = "5px";
-            div.style.padding = "5px";
+        hits.forEach(h => {
+            const src = h.source || {};
+            const title = src["Tiêu đề tin"] || src.title || src["Tiêu đề"] || "Không có tiêu đề";
+            const salary = src["Mức lương"] || src["Muc luong"] || src.salary || "Thỏa thuận";
+            const location = src["Địa điểm tuyển dụng"] || src["Địa điểm"] || src["Tỉnh thành tuyển dụng"] || "Toàn quốc";
 
-            const title = doc._source["Tiêu đề tin"] || doc._source.title || doc._source["Tiêu đề"] || "Không có tiêu đề";
-            const a = document.createElement("a");
-            a.href = `job.html?id=${encodeURIComponent(doc._id)}`;
-            a.innerText = title;
-            a.style.fontWeight = "bold";
-            a.style.textDecoration = "none";
-            a.style.color = "#333";
+            // Tạo link chi tiết (sử dụng id trả về từ API)
+            const detailUrl = `job.html?id=${encodeURIComponent(h.id)}`;
 
-            div.appendChild(a);
-            resultDiv.appendChild(div);
+            const card = document.createElement("div");
+            card.className = "job-card";
+
+            // Thêm sự kiện click cho toàn bộ card
+            card.onclick = () => {
+                window.location.href = detailUrl;
+            };
+
+            card.innerHTML = `
+                <div class="card-content">
+                    <div class="job-title">${title}</div>
+                    <div class="job-info">
+                        <div class="job-salary">💰 Lương: ${salary}</div>
+                        <div class="job-location">📍 Địa điểm: ${location}</div>
+                    </div>
+                </div>
+            `;
+
+            resultDiv.appendChild(card);
         });
 
     } catch (err) {
         console.error(err);
         alert("Có lỗi xảy ra khi tìm kiếm!");
     }
-}
+} 
 
 // Hàm upload, dùng cho upload.html
 document.addEventListener("DOMContentLoaded", () => {
@@ -72,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
         statusDiv.style.color = "black";
 
         try {
-            const response = await fetch("http://localhost:3000/upload", {
+            const response = await fetch("/upload", {
                 method: "POST",
                 body: formData
             });

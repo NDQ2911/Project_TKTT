@@ -15,6 +15,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(require('cors')());
 
+// Serve frontend static files (so search.html and assets are available)
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
+
 // Tạm lưu file upload
 const upload = multer({ dest: path.join(__dirname, '../data/') });
 
@@ -85,6 +88,39 @@ app.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 // ================= Search =================
+
+// Simple GET search API (for frontend and external clients)
+app.get("/api/search", async (req, res) => {
+    try {
+        const q = req.query.q;
+        if (!q) return res.status(400).json({ error: "Missing query" });
+
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const size = Math.min(50, parseInt(req.query.size) || 10);
+        const from = (page - 1) * size;
+
+        const response = await axios.post(`http://localhost:9200/${ES_INDEX}/_search`, {
+            query: {
+                multi_match: {
+                    query: q,
+                    fields: ["Tiêu đề tin^3", "Địa điểm tuyển dụng", "Tỉnh thành tuyển dụng", "Chức vụ", "Ngành nghề", "Lĩnh vực"]
+                }
+            },
+            from, size,
+            highlight: { fields: { "Tiêu đề tin": {}, "Mô tả": {} } }
+        });
+
+        res.json({
+            total: response.data.hits.total ? (response.data.hits.total.value || response.data.hits.total) : undefined,
+            hits: response.data.hits.hits.map(h => ({ id: h._id, score: h._score, source: h._source, highlight: h.highlight }))
+        });
+    } catch (err) {
+        console.error(err.response ? err.response.data : err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Keep existing POST /search for backwards compatibility
 app.post("/search", async (req, res) => {
     try {
         const q = req.body.q;
@@ -130,4 +166,11 @@ app.get("/job/:id", async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`Backend running at http://localhost:${PORT}`));
+// Serve root to frontend search page by redirecting to /search.html
+app.get('/', (req, res) => {
+    return res.redirect('/search.html');
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Backend running at http://0.0.0.0:${PORT} (reachable by devices on same network/hotspot)`);
+});
