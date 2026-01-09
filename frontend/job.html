@@ -1,24 +1,114 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết công việc</title>
-    <link rel="stylesheet" href="style.css">
     <style>
-        .job-container { max-width: 800px; margin: 20px auto; padding: 16px; border: 1px solid #ddd; }
-        .job-field { margin-bottom: 8px; }
-        .job-key { font-weight: bold; margin-right: 6px; }
-        .back { margin-bottom: 12px; display: inline-block; }
+        /* Cấu hình chung nhất quán với trang Search */
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background-color: #f0f2f5; 
+            color: #333; 
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .job-container { 
+            max-width: 850px; 
+            margin: 20px auto; 
+            padding: 30px; 
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        /* Nút quay lại */
+        .back { 
+            margin-bottom: 25px; 
+            display: inline-flex; 
+            align-items: center;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .back:hover { color: #0056b3; }
+
+        /* Tiêu đề chính */
+        #title { 
+            color: #1a1a1a; 
+            font-size: 2rem; 
+            margin-top: 0;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #007bff;
+        }
+
+        /* Danh sách thông tin */
+        #details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .job-field { 
+            display: flex;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+        .job-field:hover { background-color: #fafafa; }
+
+        .job-key { 
+            min-width: 200px; 
+            font-weight: 600; 
+            color: #666;
+            flex-shrink: 0;
+        }
+
+        .job-value { 
+            flex: 1; 
+            color: #2c3e50;
+            word-break: break-word;
+        }
+
+        /* Màu sắc đặc biệt cho các trường quan trọng */
+        .job-field[data-key*="Lương"] .job-value,
+        .job-field[data-key*="salary"] .job-value { 
+            color: #e67e22; 
+            font-weight: bold; 
+            font-size: 1.1rem;
+        }
+
+        .job-field[data-key*="Địa điểm"] .job-value { 
+            color: #27ae60; 
+            font-weight: 500;
+        }
+
+        /* Hiệu ứng loading */
+        .loading { color: #888; font-style: italic; }
     </style>
 </head>
 <body>
-<div class="container job-container">
-    <a class="back" href="search.html">&larr; Quay lại tìm kiếm</a>
-    <h2 id="title">Đang tải...</h2>
-    <div id="details"></div>
+
+<div class="job-container">
+    <a class="back" href="search.html">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Quay lại kết quả tìm kiếm
+    </a>
+
+    <h2 id="title" class="loading">Đang tải chi tiết công việc...</h2>
+    
+    <div id="details">
+        </div>
 </div>
 
 <script>
+    // Lấy ID từ URL
     function getParam(name) {
         const params = new URLSearchParams(window.location.search);
         return params.get(name);
@@ -30,55 +120,73 @@
         const detailsEl = document.getElementById('details');
 
         if (!id) {
-            titleEl.innerText = 'ID không hợp lệ';
+            titleEl.innerText = '⚠️ ID công việc không hợp lệ';
             return;
         }
 
         try {
-            const resp = await fetch(`http://localhost:3000/job/${encodeURIComponent(id)}`);
+            const resp = await fetch(`/job/${encodeURIComponent(id)}`);
+            
             if (resp.status === 404) {
-                titleEl.innerText = 'Không tìm thấy công việc';
+                titleEl.innerText = '❌ Không tìm thấy công việc';
                 return;
             }
-            if (!resp.ok) throw new Error('Lỗi khi lấy dữ liệu');
+            if (!resp.ok) throw new Error('Lỗi khi lấy dữ liệu từ server');
 
             const data = await resp.json();
 
-            // Try to find a good title
-            const title = data['Tiêu đề tin'] || data.title || data['Tiêu đề'] || ('Công việc ' + id);
+            // Hiển thị tiêu đề (ưu tiên các field tiếng Việt)
+            const title = data['Tiêu đề tin'] || data.title || data['Tiêu đề'] || ('Công việc #' + id);
             titleEl.innerText = title;
+            titleEl.classList.remove('loading');
 
             detailsEl.innerHTML = '';
             const keys = Object.keys(data);
+
             if (keys.length === 0) {
-                detailsEl.innerHTML = '<p>Không có thông tin chi tiết.</p>';
+                detailsEl.innerHTML = '<p>Không có dữ liệu chi tiết cho công việc này.</p>';
                 return;
             }
 
-            // Render fields
+            // Render từng trường thông tin
             keys.forEach(k => {
+                // Bỏ qua các trường kỹ thuật của Elasticsearch
+                if (k.startsWith('_') || k === 'id') return;
+
                 const div = document.createElement('div');
                 div.className = 'job-field';
-                const keySpan = document.createElement('span');
-                keySpan.className = 'job-key';
-                keySpan.innerText = k + ':';
-                const valSpan = document.createElement('span');
+                div.setAttribute('data-key', k.toLowerCase()); // Gán label để CSS bắt màu
+
+                const keyDiv = document.createElement('div');
+                keyDiv.className = 'job-key';
+                keyDiv.innerText = k;
+
+                const valDiv = document.createElement('div');
+                valDiv.className = 'job-value';
+                
                 let v = data[k];
-                if (typeof v === 'object') v = JSON.stringify(v);
-                valSpan.innerText = v;
-                div.appendChild(keySpan);
-                div.appendChild(valSpan);
+                // Xử lý nếu dữ liệu là Object hoặc mảng
+                if (typeof v === 'object' && v !== null) {
+                    v = JSON.stringify(v, null, 2);
+                }
+                
+                valDiv.innerText = v || "Chưa cập nhật";
+
+                div.appendChild(keyDiv);
+                div.appendChild(valDiv);
                 detailsEl.appendChild(div);
             });
 
         } catch (err) {
             console.error(err);
-            titleEl.innerText = 'Có lỗi khi tải dữ liệu';
-            detailsEl.innerHTML = '<p>Vui lòng thử lại sau.</p>';
+            titleEl.innerText = '⚠️ Có lỗi xảy ra';
+            detailsEl.innerHTML = `<p style="color:red;">Lỗi: ${err.message}. Vui lòng kiểm tra kết nối server.</p>`;
         }
     }
 
+    // Chạy hàm khi trang web tải xong
     document.addEventListener('DOMContentLoaded', loadJob);
 </script>
+
 </body>
 </html>
