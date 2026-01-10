@@ -1,3 +1,5 @@
+set shell := ["powershell.exe", "-c"]
+
 # ============================================================================
 # Job Crawler - Justfile
 # ============================================================================
@@ -6,37 +8,37 @@ default: help
 
 # Help
 help:
-    @echo "📦 Job Crawler - Justfile"
-    @echo ""
-    @echo "🔨 Build:"
-    @echo "  just build              - Build all services"
-    @echo "  just build-crawler      - Build crawler only"
-    @echo "  just build-enricher     - Build enricher only"
-    @echo "  just build-worker       - Build worker only"
-    @echo "  just rebuild            - Rebuild without cache"
-    @echo "  just rebuild-clean      - Clean rebuild (down -v + build + up)"
-    @echo ""
-    @echo "🚀 Services:"
-    @echo "  just up                 - Start all services"
-    @echo "  just down               - Stop services"
-    @echo "  just down-volumes       - Stop and remove volumes"
-    @echo "  just restart            - Restart services"
-    @echo "  just ps                 - Show containers"
-    @echo ""
-    @echo "📋 Logs:"
-    @echo "  just logs               - All logs (follow)"
-    @echo "  just logs-worker        - Worker logs"
-    @echo "  just logs-crawler       - Crawler logs"
-    @echo "  just logs-enricher      - Enricher logs"
-    @echo ""
-    @echo "🔍 Debug:"
-    @echo "  just stats              - Queue & ES stats"
-    @echo "  just redis              - Redis CLI"
-    @echo "  just shell              - Shell into worker"
-    @echo ""
-    @echo "🧹 Cleanup:"
-    @echo "  just clean              - Stop and remove volumes"
-    @echo "  just clean-all          - Deep clean (images, cache)"
+    @Write-Host "📦 Job Crawler - Justfile"
+    @Write-Host ""
+    @Write-Host "🔨 Build:"
+    @Write-Host "  just build              - Build all services"
+    @Write-Host "  just build-crawler      - Build crawler only"
+    @Write-Host "  just build-enricher     - Build enricher only"
+    @Write-Host "  just build-worker       - Build worker only"
+    @Write-Host "  just rebuild            - Rebuild without cache"
+    @Write-Host "  just rebuild-clean      - Clean rebuild (down -v + build + up)"
+    @Write-Host ""
+    @Write-Host "🚀 Services:"
+    @Write-Host "  just up                 - Start all services"
+    @Write-Host "  just down               - Stop services"
+    @Write-Host "  just down-volumes       - Stop and remove volumes"
+    @Write-Host "  just restart            - Restart services"
+    @Write-Host "  just ps                 - Show containers"
+    @Write-Host ""
+    @Write-Host "📋 Logs:"
+    @Write-Host "  just logs               - All logs (follow)"
+    @Write-Host "  just logs-worker        - Worker logs"
+    @Write-Host "  just logs-crawler       - Crawler logs"
+    @Write-Host "  just logs-enricher      - Enricher logs"
+    @Write-Host ""
+    @Write-Host "🔍 Debug:"
+    @Write-Host "  just stats              - Queue & ES stats"
+    @Write-Host "  just redis              - Redis CLI"
+    @Write-Host "  just shell              - Shell into worker"
+    @Write-Host ""
+    @Write-Host "🧹 Cleanup:"
+    @Write-Host "  just clean              - Stop and remove volumes"
+    @Write-Host "  just clean-all          - Deep clean (images, cache)"
 
 # ============================================================================
 # Build
@@ -44,30 +46,30 @@ help:
 
 # Build all services
 build:
-    DOCKER_BUILDKIT=1 docker compose build
+    $env:DOCKER_BUILDKIT=1; docker compose build
 
 # Build crawler only
 build-crawler:
-    DOCKER_BUILDKIT=1 docker compose build vl24h-crawler
+    $env:DOCKER_BUILDKIT=1; docker compose build vl24h-crawler
 
 # Build enricher only
 build-enricher:
-    DOCKER_BUILDKIT=1 docker compose build vl24h-enricher
+    $env:DOCKER_BUILDKIT=1; docker compose build vl24h-enricher
 
 # Build worker only
 build-worker:
-    DOCKER_BUILDKIT=1 docker compose build vl24h-worker
+    $env:DOCKER_BUILDKIT=1; docker compose build vl24h-worker
 
 # Rebuild without cache
 rebuild:
-    DOCKER_BUILDKIT=1 docker compose build --no-cache
+    $env:DOCKER_BUILDKIT=1; docker compose build --no-cache
 
 # Clean rebuild (down -v + build + up)
 rebuild-clean:
     docker compose down -v
-    DOCKER_BUILDKIT=1 docker compose build --no-cache
+    $env:DOCKER_BUILDKIT=1; docker compose build --no-cache
     docker compose up -d
-    sleep 2
+    Start-Sleep -Seconds 2
     just stats
 
 # ============================================================================
@@ -77,7 +79,7 @@ rebuild-clean:
 # Start all services
 up:
     docker compose up -d
-    sleep 2
+    Start-Sleep -Seconds 2
     just stats
 
 # Stop services
@@ -122,18 +124,18 @@ logs-enricher:
 
 # Queue & ES stats
 stats:
-    @echo "📊 Stats:"
-    @echo ""
-    @echo "Queues:"
-    @printf "  Pending: " && (docker exec redis-crawler redis-cli LLEN jobs:pending:vieclam24h 2>/dev/null || echo "Redis not ready")
-    @printf "  Raw:     " && (docker exec redis-crawler redis-cli LLEN jobs:raw:vieclam24h 2>/dev/null || echo "-")
-    @echo ""
-    @echo "Dedup keys:"
-    @printf "  Total:   " && (docker exec redis-crawler redis-cli DBSIZE 2>/dev/null || echo "-")
-    @echo ""
-    @echo "Elasticsearch:"
-    @printf "  Jobs:    " && (curl -s "http://localhost:9200/jobs_vieclam24h/_count" | grep -o '"count":[0-9]*' | cut -d: -f2 || echo "Not ready")
-    @echo ""
+    @Write-Host "📊 Stats:"
+    @Write-Host ""
+    @Write-Host "Queues:"
+    @Write-Host -NoNewline "  Pending: "; docker exec redis-crawler redis-cli LLEN jobs:pending:vieclam24h 2>$null; if ($LASTEXITCODE -ne 0) { Write-Host "Redis not ready" }
+    @Write-Host -NoNewline "  Raw:     "; docker exec redis-crawler redis-cli LLEN jobs:raw:vieclam24h 2>$null; if ($LASTEXITCODE -ne 0) { Write-Host "-" }
+    @Write-Host ""
+    @Write-Host "Dedup keys:"
+    @Write-Host -NoNewline "  Total:   "; docker exec redis-crawler redis-cli DBSIZE 2>$null; if ($LASTEXITCODE -ne 0) { Write-Host "-" }
+    @Write-Host ""
+    @Write-Host "Elasticsearch:"
+    @Write-Host -NoNewline "  Jobs:    "; try { (curl.exe -s "http://localhost:9200/jobs_vieclam24h/_count" | ConvertFrom-Json).count } catch { Write-Host "Not ready" }
+    @Write-Host ""
     @docker compose ps
 
 # Redis CLI
