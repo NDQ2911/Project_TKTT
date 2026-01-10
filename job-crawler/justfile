@@ -1,0 +1,158 @@
+# ============================================================================
+# Job Crawler - Justfile
+# ============================================================================
+
+default: help
+
+# Help
+help:
+    @echo "📦 Job Crawler - Justfile"
+    @echo ""
+    @echo "🔨 Build:"
+    @echo "  just build              - Build all services"
+    @echo "  just build-crawler      - Build crawler only"
+    @echo "  just build-enricher     - Build enricher only"
+    @echo "  just build-worker       - Build worker only"
+    @echo "  just rebuild            - Rebuild without cache"
+    @echo "  just rebuild-clean      - Clean rebuild (down -v + build + up)"
+    @echo ""
+    @echo "🚀 Services:"
+    @echo "  just up                 - Start all services"
+    @echo "  just down               - Stop services"
+    @echo "  just down-volumes       - Stop and remove volumes"
+    @echo "  just restart            - Restart services"
+    @echo "  just ps                 - Show containers"
+    @echo ""
+    @echo "📋 Logs:"
+    @echo "  just logs               - All logs (follow)"
+    @echo "  just logs-worker        - Worker logs"
+    @echo "  just logs-crawler       - Crawler logs"
+    @echo "  just logs-enricher      - Enricher logs"
+    @echo ""
+    @echo "🔍 Debug:"
+    @echo "  just stats              - Queue & ES stats"
+    @echo "  just redis              - Redis CLI"
+    @echo "  just shell              - Shell into worker"
+    @echo ""
+    @echo "🧹 Cleanup:"
+    @echo "  just clean              - Stop and remove volumes"
+    @echo "  just clean-all          - Deep clean (images, cache)"
+
+# ============================================================================
+# Build
+# ============================================================================
+
+# Build all services
+build:
+    DOCKER_BUILDKIT=1 docker compose build
+
+# Build crawler only
+build-crawler:
+    DOCKER_BUILDKIT=1 docker compose build vl24h-crawler
+
+# Build enricher only
+build-enricher:
+    DOCKER_BUILDKIT=1 docker compose build vl24h-enricher
+
+# Build worker only
+build-worker:
+    DOCKER_BUILDKIT=1 docker compose build vl24h-worker
+
+# Rebuild without cache
+rebuild:
+    DOCKER_BUILDKIT=1 docker compose build --no-cache
+
+# Clean rebuild (down -v + build + up)
+rebuild-clean:
+    docker compose down -v
+    DOCKER_BUILDKIT=1 docker compose build --no-cache
+    docker compose up -d
+    sleep 2
+    just stats
+
+# ============================================================================
+# Services
+# ============================================================================
+
+# Start all services
+up:
+    docker compose up -d
+    sleep 2
+    just stats
+
+# Stop services
+down:
+    docker compose down
+
+# Stop and remove volumes
+down-volumes:
+    docker compose down -v
+
+# Restart services
+restart:
+    docker compose restart
+
+# Show containers
+ps:
+    docker compose ps
+
+# ============================================================================
+# Logs
+# ============================================================================
+
+# All logs (follow)
+logs:
+    docker compose logs -f
+
+# Worker logs
+logs-worker:
+    docker compose logs -f vl24h-worker
+
+# Crawler logs
+logs-crawler:
+    docker compose logs -f vl24h-crawler
+
+# Enricher logs
+logs-enricher:
+    docker compose logs -f vl24h-enricher
+
+# ============================================================================
+# Debug
+# ============================================================================
+
+# Queue & ES stats
+stats:
+    @echo "📊 Stats:"
+    @echo ""
+    @echo "Queues:"
+    @printf "  Pending: " && (docker exec redis-crawler redis-cli LLEN jobs:pending:vieclam24h 2>/dev/null || echo "Redis not ready")
+    @printf "  Raw:     " && (docker exec redis-crawler redis-cli LLEN jobs:raw:vieclam24h 2>/dev/null || echo "-")
+    @echo ""
+    @echo "Dedup keys:"
+    @printf "  Total:   " && (docker exec redis-crawler redis-cli DBSIZE 2>/dev/null || echo "-")
+    @echo ""
+    @echo "Elasticsearch:"
+    @printf "  Jobs:    " && (curl -s "http://localhost:9200/jobs_vieclam24h/_count" | grep -o '"count":[0-9]*' | cut -d: -f2 || echo "Not ready")
+    @echo ""
+    @docker compose ps
+
+# Redis CLI
+redis:
+    docker exec -it redis-crawler redis-cli
+
+# Shell into worker
+shell:
+    docker exec -it vl24h-worker sh
+
+# ============================================================================
+# Cleanup
+# ============================================================================
+
+# Stop and remove volumes
+clean:
+    docker compose down -v
+
+# Deep clean (images, cache)
+clean-all:
+    docker compose down -v --rmi all
+    docker system prune -af --volumes

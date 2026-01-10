@@ -1,95 +1,54 @@
 const express = require('express');
 const multer = require('multer');
-const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const { Client } = require('@elastic/elasticsearch');
+const { seedIfEmpty } = require('./seeder');
 
 const app = express();
 const PORT = 3000;
-const ES_INDEX = "docs";
-const ES_URL = `http://localhost:9200/${ES_INDEX}/_doc`;
-const INDEX_FILE = path.join(__dirname, "index.json"); // file index.json chứa body của lệnh tạo index
+
+// Elasticsearch configuration
+const ES_HOST = process.env.ES_HOST || 'http://localhost:9200';
+const ES_INDEX_LEGACY = process.env.ES_INDEX_LEGACY || 'jobs';
+const ES_INDEX_CRAWLER = process.env.ES_INDEX_CRAWLER || 'jobs_vieclam24h';
+const DATA_PATH = process.env.DATA_PATH || path.join(__dirname, '../data/jobs.json');
+
+// Create Elasticsearch client
+const esClient = new Client({ node: ES_HOST });
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(require('cors')());
 
-// Serve frontend static files (so search.html and assets are available)
+// Serve frontend static files
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
-// Tạm lưu file upload
+// Upload config
 const upload = multer({ dest: path.join(__dirname, '../data/') });
 
-// ================= Index =================
-async function ensureIndex() {
-    try {
-        let indexBody = {};
-        if (fs.existsSync(INDEX_FILE)) {
-            indexBody = JSON.parse(fs.readFileSync(INDEX_FILE, 'utf-8'));
-        }
+// Import route modules
+const legacyRoutes = require('./routes/legacy')(esClient, ES_HOST, ES_INDEX_LEGACY);
+const crawlerRoutes = require('./routes/jobsCrawler')(esClient, ES_INDEX_CRAWLER);
+const combinedRoutes = require('./routes/combined')(esClient, { legacy: ES_INDEX_LEGACY, crawler: ES_INDEX_CRAWLER });
 
-        await axios.put(`http://localhost:9200/${ES_INDEX}`, indexBody);
-        console.log(`Index '${ES_INDEX}' đã được tạo hoặc cập nhật từ ${INDEX_FILE}`);
+// Mount routes
+app.use('/api/legacy', legacyRoutes);
+app.use('/api/crawler', crawlerRoutes);
+app.use('/api', combinedRoutes);
+
+// Health check
+app.get('/api/health', async (req, res) => {
+    try {
+        const health = await esClient.cluster.health();
+        res.json({ status: 'ok', elasticsearch: health.status });
     } catch (err) {
-        console.error("Không thể tạo index:", err.message);
-    }
-}
-
-async function indexExists() {
-    try {
-        await axios.get(`http://localhost:9200/${ES_INDEX}`);
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-// Khởi động server
-(async () => {
-    if (!(await indexExists())) await ensureIndex();
-})();
-
-// ================= Upload =================
-app.post('/upload', upload.single('file'), async (req, res) => {
-    if (!req.file) return res.status(400).json({ error: "Chưa có file" });
-
-    if (!(await indexExists())) await ensureIndex();
-
-    const filePath = req.file.path;
-    let docs = [];
-
-    try {
-        if (req.file.originalname.endsWith('.json')) {
-            docs = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-        } else {
-            return res.status(400).json({ error: "Chỉ nhận JSON" });
-        }
-
-        // Lọc và chuẩn hóa dữ liệu
-        docs = docs.filter(d => d["Id tin"] && d["Tiêu đề tin"]);
-
-        let indexed = 0;
-        for (let doc of docs) {
-            try {
-                await axios.put(`${ES_URL}/${doc["Id tin"]}`, doc); // _id = Id tin
-                indexed++;
-            } catch (e) {
-                console.error(`Index failed Id tin=${doc["Id tin"]}:`, e.message);
-            }
-        }
-
-        fs.unlinkSync(filePath);
-        res.json({ status: "ok", indexed });
-    } catch (err) {
-        fs.unlinkSync(filePath);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ status: 'error', message: err.message });
     }
 });
 
-// ================= Search =================
-
-// Simple GET search API (for frontend and external clients)
+// Legacy backwards compatibility routes
 app.get("/api/search", async (req, res) => {
     try {
         const q = req.query.q;
@@ -99,7 +58,8 @@ app.get("/api/search", async (req, res) => {
         const size = Math.min(50, parseInt(req.query.size) || 10);
         const from = (page - 1) * size;
 
-        const response = await axios.post(`http://localhost:9200/${ES_INDEX}/_search`, {
+        const response = await esClient.search({
+            index: ES_INDEX_LEGACY,
             query: {
                 multi_match: {
                     query: q,
@@ -111,66 +71,31 @@ app.get("/api/search", async (req, res) => {
         });
 
         res.json({
-            total: response.data.hits.total ? (response.data.hits.total.value || response.data.hits.total) : undefined,
-            hits: response.data.hits.hits.map(h => ({ id: h._id, score: h._score, source: h._source, highlight: h.highlight }))
+            total: response.hits.total?.value || 0,
+            hits: response.hits.hits.map(h => ({ id: h._id, score: h._score, source: h._source, highlight: h.highlight }))
         });
     } catch (err) {
-        console.error(err.response ? err.response.data : err.message);
+        console.error(err.message);
         res.status(500).json({ error: err.message });
     }
 });
 
-// Keep existing POST /search for backwards compatibility
-app.post("/search", async (req, res) => {
-    try {
-        const q = req.body.q;
-        if (!q) return res.status(400).json({ error: "Missing query" });
-
-        const response = await axios.post(`http://localhost:9200/${ES_INDEX}/_search`, {
-            query: {
-                multi_match: {
-                    query: q,
-                    fields: ["Tiêu đề tin^3", "Địa điểm tuyển dụng", "Tỉnh thành tuyển dụng", "Chức vụ", "Ngành nghề", "Lĩnh vực"]
-                }
-            },
-            size: 10
-        });
-
-        res.json(response.data.hits.hits);
-    } catch (err) {
-        console.error(err.response ? err.response.data : err.message);
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ================= Get Job by ID =================
-app.get("/job/:id", async (req, res) => {
-    try {
-        const id = req.params.id;
-        if (!id) return res.status(400).json({ error: "Missing id" });
-
-        const response = await axios.get(`http://localhost:9200/${ES_INDEX}/_doc/${id}`);
-        if (!response.data || response.data.found === false) {
-            return res.status(404).json({ error: "Not found" });
-        }
-
-        // Return the document _source
-        res.json(response.data._source);
-    } catch (err) {
-        console.error(err.response ? err.response.data : err.message);
-        // if ES returns 404 it comes here; convert to friendly 404
-        if (err.response && err.response.status === 404) {
-            return res.status(404).json({ error: "Not found" });
-        }
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Serve root to frontend search page by redirecting to /search.html
+// Root redirect
 app.get('/', (req, res) => {
-    return res.redirect('/search.html');
+    return res.redirect('/search-multi.html');
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Backend running at http://0.0.0.0:${PORT} (reachable by devices on same network/hotspot)`);
+// Start server
+app.listen(PORT, '0.0.0.0', async () => {
+    console.log(`✅ Backend running at http://0.0.0.0:${PORT}`);
+    console.log(`📁 Legacy index: ${ES_INDEX_LEGACY}`);
+    console.log(`🤖 Crawler index: ${ES_INDEX_CRAWLER}`);
+    console.log(`🔗 Elasticsearch: ${ES_HOST}`);
+
+    // Auto-seed legacy index if empty
+    try {
+        await seedIfEmpty(esClient, ES_INDEX_LEGACY, DATA_PATH);
+    } catch (err) {
+        console.error('[Seeder] Auto-seed failed:', err.message);
+    }
 });

@@ -1,0 +1,14 @@
+{
+    "name": "job-search-frontend",
+    "version": "1.0.0",
+    "description": "Job Search Frontend - Vanilla HTML/JS with Elasticsearch",
+    "scripts": {
+        "dev": "npx serve -p 8080",
+        "start": "npx serve -p 8080"
+    },
+    "keywords": [
+        "elasticsearch",
+        "job-search"
+    ],
+    "license": "MIT"
+}

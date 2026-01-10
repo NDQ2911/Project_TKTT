@@ -1,19 +1,1627 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
+
 <head>
-    <title>Tìm kiếm dữ liệu</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tìm kiếm việc làm</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Search Page Specific */
+        .search-bar-section {
+            background: linear-gradient(135deg, #5c3bfe 0%, #7c5cff 100%);
+            padding: 24px;
+        }
+
+        .search-bar-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 8px;
+            background: white;
+            padding: 6px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .search-bar input[type="text"] {
+            flex: 1;
+            border: none;
+            padding: 14px 16px;
+            font-size: 1rem;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .search-bar button {
+            background: var(--primary);
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .search-bar button:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Advanced Filters */
+        .filters-section {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-top: 16px;
+        }
+
+        .filters-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        .filters-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-group.salary {
+            min-width: 220px;
+        }
+
+        .filter-group.select {
+            min-width: 140px;
+        }
+
+        .filter-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Salary Range Slider */
+        .salary-slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .salary-display {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .salary-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+        }
+
+        .salary-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .salary-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            border: none;
+        }
+
+
+        .filter-input,
+        .filter-select {
+            padding: 10px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background: white;
+            color: var(--text-primary);
+            height: 40px;
+        }
+
+        .filter-input:focus,
+        .filter-select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+
+        .filter-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Multi-select dropdown */
+        .multi-select {
+            position: relative;
+            min-width: 150px;
+        }
+
+        .multi-select-btn {
+            width: 100%;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background: white;
+            color: var(--text-primary);
+            height: 40px;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .multi-select-btn::after {
+            content: '▼';
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .multi-select-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            margin-top: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .multi-select-dropdown.show {
+            display: block;
+        }
+
+        .multi-select-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            transition: background 0.15s;
+        }
+
+        .multi-select-option:hover {
+            background: var(--bg-light);
+        }
+
+        .multi-select-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .multi-select-count {
+            background: var(--primary);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 4px;
+        }
+
+        .salary-range {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .salary-range input {
+            width: 70px;
+            padding: 10px 8px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            height: 40px;
+            text-align: center;
+        }
+
+        .salary-range span {
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-filter {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-apply {
+            background: white;
+            color: var(--primary);
+            border: none;
+        }
+
+        .btn-apply:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-clear {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-clear:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Active Filters Display */
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .active-filter-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: white;
+        }
+
+        .active-filter-tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        .search-stats {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+        }
+
+        .search-stats span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .search-stats strong {
+            font-weight: 700;
+        }
+
+        /* Main Layout */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 24px;
+            padding: 24px;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+        }
+
+
+        /* Job List */
+        .job-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .job-list-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .job-list-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Job Card */
+        .job-card {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            gap: 14px;
+        }
+
+        .job-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 12px rgba(92, 59, 254, 0.12);
+        }
+
+        .job-logo {
+            width: 56px;
+            height: 56px;
+            background: var(--bg-gray);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .job-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .job-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .job-company {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .job-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .job-info span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .job-salary {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .job-source-tag {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--secondary-light);
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .pagination button {
+            padding: 10px 18px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            background: white;
+            color: var(--text-primary);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Sidebar */
+        .sidebar-card {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .sidebar-card-header {
+            padding: 14px 16px;
+            background: var(--bg-gray);
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .sidebar-card-body {
+            padding: 16px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.85rem;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 24px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .modal-close {
+            background: var(--bg-gray);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+        }
+
+        .modal-close:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .modal-company {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-section {
+            margin-bottom: 20px;
+        }
+
+        .modal-section h4 {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .modal-section p {
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .modal-text {
+            line-height: 1.8;
+            color: var(--text-primary);
+        }
+
+        .modal-text strong {
+            display: block;
+            font-size: 0.95rem;
+            color: var(--primary);
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+
+        .modal-text .bullet-item {
+            padding-left: 20px;
+            margin: 4px 0;
+            position: relative;
+        }
+
+        .modal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .modal-tag {
+            padding: 6px 12px;
+            background: var(--bg-gray);
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        /* Autocomplete */
+        .search-input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            margin-top: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .autocomplete-dropdown.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .autocomplete-item:hover {
+            background: var(--bg-light);
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .autocomplete-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .autocomplete-source {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .autocomplete-source.legacy {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .autocomplete-source.crawler {
+            background: var(--secondary-light);
+            color: var(--secondary);
+        }
+
+        /* Index Switcher */
+        .index-switcher {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 12px;
+            border-left: 1px solid var(--border-light);
+        }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .switch-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .switch-label.active {
+            color: var(--primary);
+        }
+
+        .switch-label.active.crawler {
+            color: var(--secondary);
+        }
+
+        .switch-toggle {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: var(--primary);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .switch-toggle.crawler {
+            background: var(--secondary);
+        }
+
+        .switch-toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: left 0.3s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .switch-toggle.crawler::after {
+            left: 27px;
+        }
+
+        .current-index-badge {
+            display: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .current-index-badge.legacy {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .current-index-badge.crawler {
+            background: var(--secondary-light);
+            color: var(--secondary);
+        }
+    </style>
 </head>
+
 <body>
-<div class="container">
-    <h2>Tìm kiếm dữ liệu</h2>
-    <div style="text-align:center;">
-        <input type="text" id="query" placeholder="Nhập từ khóa">
-        <button onclick="search()">Search</button>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-top">
+            <a href="search.html" class="site-logo">🔍 JobSearch</a>
+            <nav class="site-nav">
+                <a href="search.html" class="active">Tìm việc</a>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="upload.html">Upload</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Search Bar Section -->
+    <section class="search-bar-section">
+        <div class="search-bar-container">
+            <div class="search-bar">
+                <!-- Index Switcher -->
+                <div class="index-switcher">
+                    <div class="switch-container">
+                        <span class="switch-label active" id="labelLegacy" onclick="switchIndex('legacy')">📁
+                            jobs</span>
+                        <div class="switch-toggle" id="indexToggle" onclick="toggleIndex()"></div>
+                        <span class="switch-label" id="labelCrawler" onclick="switchIndex('crawler')">🤖
+                            vieclam24h</span>
+                    </div>
+                </div>
+
+                <div class="search-input-wrapper">
+                    <input type="text" id="searchInput" placeholder="Nhập tên công việc, vị trí, công ty..."
+                        autocomplete="off">
+                    <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+                </div>
+                <button onclick="performSearch()">🔍 Tìm kiếm</button>
+            </div>
+
+            <!-- Advanced Filters - Always Visible -->
+            <div class="filters-section">
+                <div class="filters-header">▼ Bộ lọc nâng cao</div>
+                <div class="filters-row">
+                    <!-- Salary Slider -->
+                    <div class="filter-group salary">
+                        <label class="filter-label">💰 Lương tối đa (triệu)</label>
+                        <div class="salary-slider-container">
+                            <input type="range" id="salarySlider" class="salary-slider" min="0" max="100" value="100"
+                                oninput="updateSalaryDisplay()">
+                            <div class="salary-display" id="salaryDisplay">Không giới hạn</div>
+                        </div>
+                    </div>
+
+                    <!-- Experience Multi-select -->
+                    <div class="filter-group select">
+                        <label class="filter-label">👔 Kinh nghiệm</label>
+                        <div class="multi-select" id="expMultiSelect">
+                            <button type="button" class="multi-select-btn"
+                                onclick="toggleMultiSelect('expMultiSelect')">
+                                <span id="expSelectLabel">Tất cả</span>
+                            </button>
+                            <div class="multi-select-dropdown" id="expDropdown"></div>
+                        </div>
+                    </div>
+
+                    <!-- Location Single Select -->
+                    <div class="filter-group select">
+                        <label class="filter-label">📍 Tỉnh thành</label>
+                        <select id="locationFilter" class="filter-select" onchange="onFilterChange()">
+                            <option value="">Tất cả</option>
+                        </select>
+                    </div>
+
+                    <!-- Work Type Multi-select -->
+                    <div class="filter-group select">
+                        <label class="filter-label">🏢 Hình thức</label>
+                        <div class="multi-select" id="workTypeMultiSelect">
+                            <button type="button" class="multi-select-btn"
+                                onclick="toggleMultiSelect('workTypeMultiSelect')">
+                                <span id="workTypeSelectLabel">Tất cả</span>
+                            </button>
+                            <div class="multi-select-dropdown" id="workTypeDropdown"></div>
+                        </div>
+                    </div>
+
+                    <!-- Only Clear Button -->
+                    <div class="filter-actions">
+                        <button class="btn-filter btn-clear" onclick="clearFilters()">✕ Xóa bộ lọc</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="search-stats">
+                <span>📁 <strong id="legacyCount">0</strong> Legacy Jobs</span>
+                <span>🤖 <strong id="crawlerCount">0</strong> Crawler Jobs</span>
+                <span>📊 <strong id="totalCount">0</strong> Tổng cộng</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Job List -->
+        <div class="job-list-section">
+
+            <!-- Job List Header -->
+            <div class="job-list-header">
+                <div class="job-list-title" id="listTitle">Việc làm mới nhất</div>
+                <div class="job-list-meta" id="listMeta">Nhập từ khóa để tìm kiếm</div>
+            </div>
+
+            <!-- Job Cards -->
+            <div id="jobResults">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <p>Nhập từ khóa và nhấn Tìm kiếm để bắt đầu</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination" style="display: none;">
+                <button onclick="changePage(-1)" id="prevBtn">← Trước</button>
+                <span class="page-info" id="pageInfo">1 / 1</span>
+                <button onclick="changePage(1)" id="nextBtn">Sau →</button>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">📊 Thống kê</div>
+                <div class="sidebar-card-body">
+                    <div class="stat-item">
+                        <span>Legacy Jobs</span>
+                        <span class="stat-value" id="sidebarLegacy">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Crawler Jobs</span>
+                        <span class="stat-value" id="sidebarCrawler">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Tổng cộng</span>
+                        <span class="stat-value" id="sidebarTotal">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">🔗 Liên kết nhanh</div>
+                <div class="sidebar-card-body">
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">
+                        Xem thống kê chi tiết và phân tích dữ liệu việc làm
+                    </p>
+                    <a href="dashboard.html" class="btn btn-primary" style="width: 100%; text-decoration: none;">
+                        📈 Xem Dashboard
+                    </a>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="jobModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="modalTitle">Loading...</h2>
+                    <div class="modal-company" id="modalCompany"></div>
+                </div>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modalContent"></div>
+        </div>
     </div>
-    <h3>Kết quả:</h3>
-    <div id="result"></div>
-</div>
-<script src="script.js"></script>
+
+    <script>
+        const API_URL = "http://localhost:3000";
+        let currentSource = "legacy";
+        let currentQuery = "";
+        let currentPage = 1;
+        let totalResults = 0;
+        const pageSize = 15;
+        let debounceTimer;
+
+        // Filter state
+        let filters = {
+            salaryMax: 100,
+            experience: [],
+            location: '',
+            workType: []
+        };
+
+        // Multi-select data
+        let expOptions = [];
+        let workTypeOptions = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadFilterOptions();
+            updateIndexUI();
+            updateSalaryDisplay();
+            // Load default results on page load
+            performSearch();
+        });
+
+        // Index Switcher Functions
+        function toggleIndex() {
+            if (currentSource === 'legacy') {
+                switchIndex('crawler');
+            } else {
+                switchIndex('legacy');
+            }
+        }
+
+        function switchIndex(index) {
+            currentSource = index;
+            updateIndexUI();
+
+            // Re-trigger search if there's a query
+            if (currentQuery) {
+                performSearch();
+            }
+
+            // Reload filter options for the new index
+            loadFilterOptions();
+        }
+
+        function updateIndexUI() {
+            const toggle = document.getElementById('indexToggle');
+            const labelLegacy = document.getElementById('labelLegacy');
+            const labelCrawler = document.getElementById('labelCrawler');
+
+            if (currentSource === 'crawler') {
+                toggle.classList.add('crawler');
+                labelLegacy.classList.remove('active');
+                labelCrawler.classList.add('active', 'crawler');
+            } else {
+                toggle.classList.remove('crawler');
+                labelLegacy.classList.add('active');
+                labelCrawler.classList.remove('active', 'crawler');
+            }
+        }
+
+        // Salary Slider
+        function updateSalaryDisplay() {
+            const slider = document.getElementById('salarySlider');
+            const display = document.getElementById('salaryDisplay');
+            const value = parseInt(slider.value);
+            filters.salaryMax = value;
+
+            if (value >= 100) {
+                display.textContent = 'Không giới hạn';
+            } else if (value === 0) {
+                display.textContent = 'Thỏa thuận';
+            } else {
+                display.textContent = `≤ ${value} triệu`;
+            }
+        }
+
+        // Multi-select functions
+        function toggleMultiSelect(id) {
+            const dropdown = document.querySelector(`#${id} .multi-select-dropdown`);
+            const allDropdowns = document.querySelectorAll('.multi-select-dropdown');
+
+            // Close other dropdowns
+            allDropdowns.forEach(d => {
+                if (d !== dropdown) d.classList.remove('show');
+            });
+
+            dropdown.classList.toggle('show');
+        }
+
+        function updateMultiSelectLabel(type) {
+            const selected = type === 'exp' ? filters.experience : filters.workType;
+            const labelEl = document.getElementById(type === 'exp' ? 'expSelectLabel' : 'workTypeSelectLabel');
+
+            if (selected.length === 0) {
+                labelEl.innerHTML = 'Tất cả';
+            } else if (selected.length === 1) {
+                labelEl.innerHTML = selected[0];
+            } else {
+                labelEl.innerHTML = `${selected.length} đã chọn`;
+            }
+        }
+
+        function handleMultiSelectChange(type, value, checked) {
+            const arr = type === 'exp' ? filters.experience : filters.workType;
+
+            if (checked) {
+                if (!arr.includes(value)) arr.push(value);
+            } else {
+                const idx = arr.indexOf(value);
+                if (idx > -1) arr.splice(idx, 1);
+            }
+
+            updateMultiSelectLabel(type);
+            onFilterChange();
+        }
+
+        function renderMultiSelect(type, options) {
+            const dropdownId = type === 'exp' ? 'expDropdown' : 'workTypeDropdown';
+            const dropdown = document.getElementById(dropdownId);
+            const selected = type === 'exp' ? filters.experience : filters.workType;
+
+            dropdown.innerHTML = options.map(opt => `
+                <label class="multi-select-option">
+                    <input type="checkbox" 
+                           value="${escapeHtml(opt.key)}" 
+                           ${selected.includes(opt.key) ? 'checked' : ''}
+                           onchange="handleMultiSelectChange('${type}', '${escapeHtml(opt.key)}', this.checked)">
+                    ${escapeHtml(opt.key)} (${opt.doc_count})
+                </label>
+            `).join('');
+        }
+
+        // Close multi-select on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.multi-select')) {
+                document.querySelectorAll('.multi-select-dropdown').forEach(d => d.classList.remove('show'));
+            }
+        });
+
+        // Auto-apply filters on change
+        function onFilterChange() {
+            filters.location = document.getElementById('locationFilter').value;
+
+            if (currentQuery) {
+                performSearch();
+            }
+        }
+
+        // Load filter options from aggregations
+        async function loadFilterOptions() {
+            try {
+                // Use aggregations from current selected index
+                const aggEndpoint = currentSource === 'crawler'
+                    ? '/api/crawler/aggs/all'
+                    : '/api/legacy/aggs/all';
+
+                const res = await fetch(`${API_URL}${aggEndpoint}?size=50`);
+                if (!res.ok) {
+                    console.warn('Aggregations not available for this index');
+                    return;
+                }
+
+                const data = await res.json();
+
+                // Experience options - field name differs by index
+                const expField = currentSource === 'crawler' ? 'experience' : 'kinh_nghiem';
+                expOptions = data.aggregations?.[expField] || [];
+                renderMultiSelect('exp', expOptions);
+
+                // Location options - field name differs by index
+                const locField = currentSource === 'crawler' ? 'location_city' : 'tinh_thanh';
+                const locSelect = document.getElementById('locationFilter');
+                locSelect.innerHTML = '<option value="">Tất cả</option>';
+                (data.aggregations?.[locField] || []).forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.key;
+                    opt.textContent = `${item.key} (${item.doc_count})`;
+                    locSelect.appendChild(opt);
+                });
+
+                // Work type options - field name differs by index
+                const workTypeField = currentSource === 'crawler' ? 'work_type' : 'hinh_thuc';
+                workTypeOptions = data.aggregations?.[workTypeField] || [];
+                renderMultiSelect('workType', workTypeOptions);
+
+            } catch (err) {
+                console.error('Failed to load filter options:', err);
+            }
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('salarySlider').value = 100;
+            document.getElementById('locationFilter').value = '';
+
+            filters = {
+                salaryMax: 100,
+                experience: [],
+                location: '',
+                workType: []
+            };
+
+            updateSalaryDisplay();
+            renderMultiSelect('exp', expOptions);
+            renderMultiSelect('workType', workTypeOptions);
+            updateMultiSelectLabel('exp');
+            updateMultiSelectLabel('workType');
+
+            if (currentQuery) {
+                performSearch();
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_URL}/api/stats`);
+                const data = await res.json();
+
+                document.getElementById('legacyCount').textContent = data.indexes.legacy.count.toLocaleString();
+                document.getElementById('crawlerCount').textContent = data.indexes.crawler.count.toLocaleString();
+                document.getElementById('totalCount').textContent = data.total.toLocaleString();
+
+                document.getElementById('sidebarLegacy').textContent = data.indexes.legacy.count.toLocaleString();
+                document.getElementById('sidebarCrawler').textContent = data.indexes.crawler.count.toLocaleString();
+                document.getElementById('sidebarTotal').textContent = data.total.toLocaleString();
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+            }
+        }
+
+        // Autocomplete - shows keyword suggestions
+        const searchInput = document.getElementById('searchInput');
+        const dropdown = document.getElementById('autocompleteDropdown');
+
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            const q = e.target.value.trim();
+            if (q.length < 2) { dropdown.classList.remove('show'); return; }
+
+            debounceTimer = setTimeout(async () => {
+                try {
+                    // Fetch suggestions from current source
+                    const endpoint = currentSource === 'crawler' ? '/api/crawler/autocomplete' : '/api/legacy/autocomplete';
+                    const res = await fetch(`${API_URL}${endpoint}?q=${encodeURIComponent(q)}`);
+                    const data = await res.json();
+                    const suggestions = data.suggestions || [];
+
+                    if (suggestions.length > 0) {
+                        dropdown.innerHTML = suggestions.map(s => `
+                            <div class="autocomplete-item" onclick="selectSuggestion('${escapeHtml(typeof s === 'string' ? s : s.title || s)}')">
+                                <span class="autocomplete-icon">🔍</span>
+                                <span class="autocomplete-text">${escapeHtml(typeof s === 'string' ? s : s.title || s)}</span>
+                            </div>
+                        `).join('');
+                        dropdown.classList.add('show');
+                    } else {
+                        dropdown.classList.remove('show');
+                    }
+                } catch (err) {
+                    dropdown.classList.remove('show');
+                }
+            }, 200);
+        });
+
+
+        function selectSuggestion(title, source) {
+            searchInput.value = title;
+            dropdown.classList.remove('show');
+            if (source && source !== currentSource && currentSource !== 'both') {
+                setSource(source);
+            }
+            performSearch();
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-input-wrapper')) dropdown.classList.remove('show');
+        });
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                dropdown.classList.remove('show');
+                performSearch();
+            }
+        });
+
+        async function performSearch(resetPage = true) {
+            currentQuery = searchInput.value.trim();
+            if (resetPage) currentPage = 1;
+
+            const resultsEl = document.getElementById('jobResults');
+            const paginationEl = document.getElementById('pagination');
+
+            resultsEl.innerHTML = '<div class="loading"><div class="spinner"></div><p>Đang tìm kiếm...</p></div>';
+
+            try {
+                // Check if any filter is active
+                const hasFilters = filters.salaryMax < 100 ||
+                    filters.experience.length > 0 ||
+                    filters.location ||
+                    filters.workType.length > 0;
+
+                // Use advanced search when filters are applied
+                const baseEndpoint = currentSource === 'crawler' ? '/api/crawler' : '/api/legacy';
+                const endpoint = hasFilters ? `${baseEndpoint}/search/advanced` : `${baseEndpoint}/search`;
+
+                // Build request body
+                const body = {
+                    q: currentQuery,
+                    page: currentPage,
+                    size: pageSize
+                };
+
+                // Add filter parameters for advanced search
+                if (hasFilters) {
+                    if (filters.salaryMax < 100) body.salary_max = filters.salaryMax * 1000000; // Convert to VND
+                    if (filters.experience.length > 0) body.experience = filters.experience[0]; // Advanced takes single value
+                    if (filters.location) {
+                        body.location_city = filters.location; // For crawler
+                        body.tinh_thanh = filters.location; // For legacy
+                    }
+                    if (filters.workType.length > 0) body.work_type = filters.workType[0];
+                }
+
+                const res = await fetch(`${API_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+
+                totalResults = data.total || 0;
+                const titleText = currentQuery
+                    ? `Kết quả tìm kiếm "${currentQuery}"`
+                    : 'Việc làm mới nhất';
+                document.getElementById('listTitle').textContent = titleText;
+                document.getElementById('listMeta').textContent = `${totalResults.toLocaleString()} việc làm • ${data.time}`;
+
+                // Show did-you-mean suggestion
+                let didYouMeanHtml = '';
+                if (data.didYouMean && data.didYouMean !== currentQuery) {
+                    didYouMeanHtml = `
+                        <div class="did-you-mean" style="padding: 12px 16px; background: #fff3cd; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span style="color: #856404;">💡 Ý bạn là:</span>
+                            <a href="#" onclick="searchWithSuggestion('${escapeHtml(data.didYouMean)}'); return false;" 
+                               style="color: var(--primary); font-weight: 600; text-decoration: underline;">
+                                ${escapeHtml(data.didYouMean)}
+                            </a>
+                            <span style="color: #856404; font-size: 0.85rem;">?</span>
+                        </div>
+                    `;
+                }
+
+                if (data.hits?.length > 0) {
+                    resultsEl.innerHTML = didYouMeanHtml + data.hits.map(hit => renderJobCard(hit)).join('');
+
+                    const maxPage = Math.ceil(totalResults / pageSize);
+                    paginationEl.style.display = 'flex';
+                    document.getElementById('pageInfo').textContent = `${currentPage} / ${maxPage}`;
+                    document.getElementById('prevBtn').disabled = currentPage <= 1;
+                    document.getElementById('nextBtn').disabled = currentPage >= maxPage;
+                } else {
+                    resultsEl.innerHTML = didYouMeanHtml + '<div class="empty-state"><div class="empty-state-icon">😕</div><p>Không tìm thấy kết quả</p></div>';
+                    paginationEl.style.display = 'none';
+                }
+            } catch (err) {
+                resultsEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">❌</div><p style="color: var(--danger);">Lỗi: ${err.message}</p></div>`;
+                paginationEl.style.display = 'none';
+            }
+        }
+
+        function renderJobCard(hit) {
+            const s = hit._source;
+            const isCrawler = currentSource === 'crawler';
+
+            const title = isCrawler ? (s.title || 'N/A') : (s["Tiêu đề tin"] || 'N/A');
+            const company = isCrawler ? (s.company || '') : '';
+            const location = isCrawler ? (s.location || s.location_city?.join(', ') || 'N/A') : (s["Tỉnh thành tuyển dụng"] || s["Địa điểm tuyển dụng"] || 'N/A');
+            const salary = isCrawler ? (s.salary || 'Thỏa thuận') : (s["Mức lương"] || 'Thỏa thuận');
+            const exp = isCrawler ? (s.experience || '') : (s["Kinh nghiệm"] || '');
+            const source = isCrawler ? (s.source || 'Crawler') : 'Legacy';
+
+            // Additional crawler fields
+            const workType = isCrawler ? s.work_type : null;
+            const position = isCrawler ? s.position : null;
+            const industry = isCrawler && s.industry?.length ? s.industry.join(', ') : null;
+            const qualifications = isCrawler ? s.qualifications : null;
+            const isNegotiable = isCrawler && s.is_negotiable;
+            const totalViews = isCrawler && s.total_views > 0 ? s.total_views : null;
+            const expiredAt = isCrawler && s.expired_at ? new Date(s.expired_at).toLocaleDateString('vi-VN') : null;
+            const createdAt = isCrawler && s.created_at ? new Date(s.created_at).toLocaleDateString('vi-VN') : null;
+
+            // Build additional info line
+            let extraInfo = [];
+            if (workType) extraInfo.push(`🏢 ${workType}`);
+            if (position) extraInfo.push(`📋 ${position}`);
+            if (industry) extraInfo.push(`🏭 ${industry}`);
+            if (qualifications) extraInfo.push(`🎓 ${qualifications}`);
+
+            let metaInfo = [];
+            if (totalViews) metaInfo.push(`👁 ${totalViews.toLocaleString()} lượt xem`);
+            if (createdAt) metaInfo.push(`📅 ${createdAt}`);
+            if (expiredAt) metaInfo.push(`⏰ Hạn: ${expiredAt}`);
+
+            // Score & Explain
+            const score = hit._score ? hit._score.toFixed(2) : null;
+            const explainData = hit._explanation ? JSON.stringify(hit._explanation, null, 2) : null;
+
+            return `
+                <div class="job-card" onclick="showJobDetail('${hit._id}', '${currentSource}')">
+                    <div class="job-logo">🏢</div>
+                    <div class="job-content">
+                        <div class="job-title">
+                            ${escapeHtml(title)}
+                            ${score ? `<span style="font-size: 0.7rem; font-weight: 400; color: var(--secondary); margin-left: 8px;" title="Relevance Score">📊 ${score}</span>` : ''}
+                        </div>
+                        ${company ? `<div class="job-company">${escapeHtml(company)}</div>` : ''}
+                        <div class="job-info">
+                            <span>📍 ${escapeHtml(location)}</span>
+                            <span class="job-salary">${isNegotiable ? '💬' : '💰'} ${escapeHtml(salary)}</span>
+                            ${exp ? `<span>👔 ${escapeHtml(exp)}</span>` : ''}
+                            <span class="job-source-tag">${escapeHtml(source)}</span>
+                        </div>
+                        ${extraInfo.length > 0 ? `
+                        <div class="job-info" style="margin-top: 6px; font-size: 0.75rem; color: var(--text-muted);">
+                            ${extraInfo.map(info => `<span>${escapeHtml(info)}</span>`).join('')}
+                        </div>
+                        ` : ''}
+                        ${metaInfo.length > 0 ? `
+                        <div class="job-info" style="margin-top: 4px; font-size: 0.7rem; opacity: 0.7;">
+                            ${metaInfo.map(info => `<span>${escapeHtml(info)}</span>`).join('')}
+                        </div>
+                        ` : ''}
+                        ${explainData ? `
+                        <details style="margin-top: 8px; font-size: 0.7rem;" onclick="event.stopPropagation();">
+                            <summary style="cursor: pointer; color: var(--primary); font-weight: 500;">🔍 Xem Explain Score</summary>
+                            <pre style="background: var(--bg-gray); padding: 8px; border-radius: 4px; overflow-x: auto; max-height: 200px; margin-top: 4px; font-size: 0.65rem;">${escapeHtml(explainData)}</pre>
+                        </details>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function changePage(delta) {
+            const maxPage = Math.ceil(totalResults / pageSize);
+            const newPage = currentPage + delta;
+            if (newPage < 1 || newPage > maxPage) return;
+            currentPage = newPage;
+            performSearch(false);
+        }
+
+        function searchWithSuggestion(suggestion) {
+            searchInput.value = suggestion;
+            performSearch();
+        }
+
+        async function showJobDetail(id, index) {
+            const modal = document.getElementById('jobModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalCompany = document.getElementById('modalCompany');
+            const modalContent = document.getElementById('modalContent');
+
+            modal.classList.add('show');
+            modalTitle.textContent = 'Đang tải...';
+            modalCompany.textContent = '';
+            modalContent.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+            try {
+                const endpoint = index === 'crawler' ? `/api/crawler/job/${id}` : `/api/legacy/job/${id}`;
+                const res = await fetch(`${API_URL}${endpoint}`);
+                const data = await res.json();
+                const job = data.data;
+
+                if (index === 'crawler') {
+                    modalTitle.textContent = job.title || 'N/A';
+                    modalCompany.textContent = job.company ? `🏢 ${job.company}` : '';
+
+                    // Format location - handle arrays
+                    const locationParts = [];
+                    if (job.location) locationParts.push(job.location);
+                    else {
+                        if (job.location_city?.length) locationParts.push(job.location_city.join(', '));
+                        if (job.location_district?.length) locationParts.push(`Quận: ${job.location_district.join(', ')}`);
+                    }
+                    const locationDisplay = locationParts.join(' • ') || 'N/A';
+
+                    // Format dates
+                    const formatDate = (d) => d ? new Date(d).toLocaleDateString('vi-VN') : null;
+                    const deadlineDate = formatDate(job.deadline);
+                    const createdDate = formatDate(job.created_at);
+                    const updatedDate = formatDate(job.updated_at);
+
+                    modalContent.innerHTML = `
+                        <div class="modal-section">
+                            <h4>Thông tin chung</h4>
+                            <div class="modal-tags">
+                                <span class="modal-tag">📍 ${escapeHtml(locationDisplay)}</span>
+                                <span class="modal-tag">💰 ${escapeHtml(job.salary || 'Thỏa thuận')}</span>
+                                <span class="modal-tag">👔 ${escapeHtml(job.experience || 'N/A')}</span>
+                                <span class="modal-tag">🏢 ${escapeHtml(job.work_type || 'N/A')}</span>
+                                ${job.position ? `<span class="modal-tag">📋 ${escapeHtml(job.position)}</span>` : ''}
+                                ${job.industry ? `<span class="modal-tag">🏭 ${escapeHtml(job.industry)}</span>` : ''}
+                                ${job.qualifications ? `<span class="modal-tag">🎓 ${escapeHtml(job.qualifications)}</span>` : ''}
+                            </div>
+                        </div>
+                        
+                        ${deadlineDate || createdDate ? `
+                        <div class="modal-section">
+                            <h4>Thời gian</h4>
+                            <div class="modal-tags">
+                                ${deadlineDate ? `<span class="modal-tag">⏰ Hạn nộp: ${deadlineDate}</span>` : ''}
+                                ${createdDate ? `<span class="modal-tag">📅 Đăng: ${createdDate}</span>` : ''}
+                                ${updatedDate && updatedDate !== createdDate ? `<span class="modal-tag">🔄 Cập nhật: ${updatedDate}</span>` : ''}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        ${job.description ? `<div class="modal-section"><h4>Mô tả công việc</h4><div class="modal-text">${formatJobText(job.description)}</div></div>` : ''}
+                        ${job.requirements ? `<div class="modal-section"><h4>Yêu cầu</h4><div class="modal-text">${formatJobText(job.requirements)}</div></div>` : ''}
+                        ${job.benefits ? `<div class="modal-section"><h4>Quyền lợi</h4><div class="modal-text">${formatJobText(job.benefits)}</div></div>` : ''}
+                        
+                        ${job.skills?.length ? `<div class="modal-section"><h4>Kỹ năng</h4><div class="modal-tags">${job.skills.map(s => `<span class="modal-tag">${escapeHtml(s)}</span>`).join('')}</div></div>` : ''}
+                        
+                        <div class="modal-section" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                            ${job.source_url ? `<a href="${job.source_url}" target="_blank" style="color: var(--primary); font-weight: 600;">🔗 Xem trên nguồn gốc</a>` : ''}
+                            ${job.source ? `<span class="modal-tag" style="background: var(--secondary-light); color: var(--secondary);">📦 ${escapeHtml(job.source)}</span>` : ''}
+                        </div>
+                    `;
+                } else {
+                    modalTitle.textContent = job["Tiêu đề tin"] || 'N/A';
+                    modalCompany.textContent = '';
+                    modalContent.innerHTML = `
+                        <div class="modal-section">
+                            <h4>Thông tin chung</h4>
+                            <div class="modal-tags">
+                                <span class="modal-tag">📍 ${escapeHtml(job["Tỉnh thành tuyển dụng"] || job["Địa điểm tuyển dụng"] || 'N/A')}</span>
+                                <span class="modal-tag">💰 ${escapeHtml(job["Mức lương"] || 'Thỏa thuận')}</span>
+                                <span class="modal-tag">👔 ${escapeHtml(job["Kinh nghiệm"] || 'N/A')}</span>
+                                <span class="modal-tag">🏢 ${escapeHtml(job["Hình thức làm việc"] || 'N/A')}</span>
+                                <span class="modal-tag">🏭 ${escapeHtml(job["Ngành nghề"] || 'N/A')}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                modalTitle.textContent = 'Lỗi';
+                modalCompany.textContent = '';
+                modalContent.innerHTML = `<p style="color: var(--danger);">Không thể tải: ${err.message}</p>`;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('jobModal').classList.remove('show');
+        }
+
+        document.getElementById('jobModal').addEventListener('click', (e) => {
+            if (e.target.id === 'jobModal') closeModal();
+        });
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[m]);
+        }
+
+        // Format job text for display (description, requirements, benefits)
+        function formatJobText(text) {
+            if (!text) return '';
+
+            let s = String(text);
+
+            // Decode HTML entities that might be double-encoded
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = s;
+            s = textarea.value;
+            textarea.innerHTML = s; // Double decode
+            s = textarea.value;
+
+            // Add line break before section headers (ALL CAPS Vietnamese text)
+            s = s.replace(/([A-ZÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬĐÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴ][A-ZÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬĐÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴ\s]{10,})/g, '\n\n<strong>$1</strong>\n');
+
+            // Split merged sentences (lowercase.Uppercase)
+            s = s.replace(/([.!?])([A-ZÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬĐÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴ][a-zàáảãạăắằẳẵặâấầẩẫậđèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵ])/g, '$1\n$2');
+
+            // Split text where lowercase is immediately followed by uppercase (no punctuation)
+            // e.g., "majorTốt" -> "major\nTốt", "levelPreferred" -> "level\nPreferred"
+            s = s.replace(/([a-zàáảãạăắằẳẵặâấầẩẫậđèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵ])([A-ZÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬĐÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴ])/g, '$1\n$2');
+
+            // Convert bullet chars to newline bullet (but not - between letters like "Follow-up")
+            s = s.replace(/[•*▪●○►✓]\s*/g, '\n• ');
+            // Convert - to bullet only if NOT between letters (preserve hyphenated words)
+            s = s.replace(/(?<![a-zA-Zàáảãạăắằẳẵặâấầẩẫậđèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵ])-\s*/g, '\n• ');
+
+            // Process line by line
+            const lines = s.split('\n');
+            const result = [];
+
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+
+                if (line.startsWith('• ')) {
+                    // Bullet point - indent with padding
+                    result.push(`<div class="bullet-item">${line}</div>`);
+                } else if (line.startsWith('<strong>')) {
+                    // Section header
+                    result.push(line);
+                } else {
+                    // Regular text
+                    result.push(`<div>${line}</div>`);
+                }
+            }
+
+            return result.join('');
+        }
+    </script>
 </body>
+
 </html>

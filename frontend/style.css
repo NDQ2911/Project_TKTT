@@ -1,102 +1,383 @@
-body {
-    background: #f6f8fa;
-    font-family: Arial, sans-serif;
+/* ============================================
+   JOB SEARCH - LIGHT THEME (Vieclam24h Style)
+   ============================================ */
+
+:root {
+    /* Primary - Purple/Violet */
+    --primary: #5c3bfe;
+    --primary-dark: #4a2fd6;
+    --primary-light: #f0edff;
+
+    /* Secondary */
+    --secondary: #00c853;
+    --secondary-light: #e8f5e9;
+
+    /* Accent */
+    --accent: #ff6b00;
+    --accent-light: #fff3e0;
+
+    /* Danger */
+    --danger: #f44336;
+
+    /* Backgrounds */
+    --bg-white: #ffffff;
+    --bg-light: #f5f7fa;
+    --bg-gray: #eef1f6;
+
+    /* Text */
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-muted: #999999;
+
+    /* Borders */
+    --border-light: #e0e0e0;
+    --border-medium: #d0d0d0;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+
+    /* Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+}
+
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-light);
+    color: var(--text-primary);
+    line-height: 1.5;
+    min-height: 100vh;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.site-header {
+    background: linear-gradient(135deg, #5c3bfe 0%, #7c5cff 100%);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: var(--shadow-md);
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.site-logo {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.site-nav {
+    display: flex;
+    gap: 4px;
+}
+
+.site-nav a {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.site-nav a:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.site-nav a.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* ============================================
+   CONTAINER
+   ============================================ */
+
 .container {
-    max-width: 500px;
-    margin: 40px auto;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    padding: 32px 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px;
 }
-h2 {
-    text-align: center;
-    color: #333;
+
+/* ============================================
+   CARDS
+   ============================================ */
+
+.card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
 }
-#query, #fileInput {
-    width: 80%;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    margin-right: 8px;
-    font-size: 16px;
+
+.card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-light);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
-#query {
-    margin-bottom: 12px;
-    margin-right: 12px;
+
+.card-body {
+    padding: 20px;
 }
-button {
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: none;
-    background: #1976d2;
-    color: #fff;
-    font-size: 16px;
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+button,
+.btn {
+    font-family: inherit;
     cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: none;
+    font-weight: 500;
 }
-button:hover {
-    background: #1565c0;
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
 }
-#result > div {
-    background: #f1f1f1;
-    border-radius: 6px;
-    margin: 8px 0;
-    padding: 12px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+
+.btn-primary:hover {
+    background: var(--primary-dark);
 }
-h3 {
-    margin-top: 24px;
-    color: #444;
+
+.btn-outline {
+    background: white;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
 }
-#uploadForm {
+
+.btn-outline:hover {
+    background: var(--primary-light);
+}
+
+/* ============================================
+   FORMS
+   ============================================ */
+
+input,
+select,
+textarea {
+    font-family: inherit;
+    font-size: 0.95rem;
+    padding: 12px 16px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: white;
+    color: var(--text-primary);
+    width: 100%;
+    transition: all 0.2s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+input::placeholder {
+    color: var(--text-muted);
+}
+
+/* ============================================
+   BADGES
+   ============================================ */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-primary {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.badge-success {
+    background: var(--secondary-light);
+    color: var(--secondary);
+}
+
+.badge-warning {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+/* ============================================
+   TABLES
+   ============================================ */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+}
+
+th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--bg-gray);
+    text-transform: uppercase;
+}
+
+tr:hover td {
+    background: var(--bg-light);
+}
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+
+.text-primary {
+    color: var(--primary);
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.text-success {
+    color: var(--secondary);
+}
+
+.text-danger {
+    color: var(--danger);
+}
+
+.bg-white {
+    background: var(--bg-white);
+}
+
+.bg-light {
+    background: var(--bg-light);
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.font-semibold {
+    font-weight: 600;
+}
+
+.flex {
+    display: flex;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.gap-2 {
+    gap: 8px;
+}
+
+.gap-4 {
+    gap: 16px;
+}
+
+.mt-4 {
+    margin-top: 16px;
+}
+
+.mb-4 {
+    margin-bottom: 16px;
+}
+
+.rounded {
+    border-radius: var(--radius-md);
+}
+
+.shadow {
+    box-shadow: var(--shadow-sm);
+}
+
+/* ============================================
+   SPINNER
+   ============================================ */
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border-light);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
-    margin-top: 24px;
-}
-#status {
-    margin-top: 24px;
-    text-align: center;
-    color: #1976d2;
-    font-size: 16px;
-}
-
-.job-card {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 8px 12px;
-    margin-bottom: 0px; /* Đảm bảo không có margin ngoài gây khoảng cách xa */
-    cursor: pointer;    /* Biến con trỏ thành hình bàn tay */
-    transition: all 0.2s ease; /* Hiệu ứng mượt mà */
-}
-
-.job-card:hover {
-    background-color: #f0f7ff; /* Đổi màu nền nhẹ khi di chuột vào */
-    border-color: #007bff;     /* Đổi màu viền sang xanh */
-}
-
-.job-title {
-    font-size: 1.1rem;
-    color: #007bff;
-    font-weight: bold;
-    margin-bottom: 4px;
-    /* Không cần dùng thẻ <a> ở đây nữa vì cả thẻ đã là link */
-}
-
-.job-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-/* Ép khoảng cách giữa các card trong result thật khít */
-#result {
-    display: flex;
-    flex-direction: column;
-    gap: 4px; /* Bạn có thể chỉnh về 2px hoặc 0px nếu muốn khít hơn nữa */
+    justify-content: center;
+    padding: 48px;
+    gap: 12px;
+    color: var(--text-muted);
 }

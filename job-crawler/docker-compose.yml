@@ -1,0 +1,167 @@
+services:
+  # Elasticsearch for storing crawled jobs
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: es-crawler
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    networks:
+      - crawler-net
+
+  # Kibana for visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana-crawler
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.security.enabled=false
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - crawler-net
+    restart: unless-stopped
+
+  # Redis for queue & deduplication
+  redis:
+    image: redis:7-alpine
+    container_name: redis-crawler
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - crawler-net
+
+  # Vieclam24h: List Crawler
+  vl24h-crawler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: vl24h-crawler
+    image: job-crawler:vl24h-crawler
+    container_name: vl24h-crawler
+    environment:
+      - REDIS_ADDR=redis:6379
+      - CRAWLER_DELAY_MS=3
+      # - CRAWLER_VERBOSE_LOG=true
+
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - crawler-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  # Vieclam24h Enricher - Stage 2
+  vl24h-enricher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: vl24h-enricher
+    image: job-crawler:vl24h-enricher
+    container_name: vl24h-enricher
+    environment:
+      - REDIS_ADDR=redis:6379
+      - REDIS_JOB_QUEUE=jobs:raw:vieclam24h
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - crawler-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Worker - Optimized for performance
+  vl24h-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    image: job-crawler:worker
+    container_name: vl24h-worker
+    environment:
+      - REDIS_ADDR=redis:6379
+      - REDIS_JOB_QUEUE=jobs:raw:vieclam24h
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_INDEX=jobs_vieclam24h
+      - WORKER_CONCURRENCY=2
+      - WORKER_BATCH_SIZE=100
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - crawler-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2.0'
+        reservations:
+          memory: 512M
+          cpus: '1.0'
+  # VietnamWorks Crawler (uncomment to enable)
+  # vietnamworks-crawler:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #     target: vietnamworks
+  #   image: job-crawler:vietnamworks
+  #   container_name: vietnamworks-crawler
+  #   environment:
+  #     - REDIS_ADDR=redis:6379
+  #     - ELASTICSEARCH_URL=http://elasticsearch:9200
+  #     - ELASTICSEARCH_INDEX=jobs_vietnamworks
+  #     - CRAWLER_DELAY_MS=2000
+  #     - WORKER_CONCURRENCY=10
+  #     - WORKER_BATCH_SIZE=100
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #     elasticsearch:
+  #       condition: service_healthy
+  #   networks:
+  #     - crawler-net
+  #   restart: unless-stopped
+
+volumes:
+  es_data:
+  redis_data:
+
+
+networks:
+  crawler-net:
+    driver: bridge
