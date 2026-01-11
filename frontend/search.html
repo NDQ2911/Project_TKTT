@@ -915,7 +915,7 @@
             </div>
 
             <div class="search-stats">
-                <span>📁 <strong id="legacyCount">0</strong> Legacy Jobs</span>
+                <span>📁 <strong id="legacyCount">0</strong> Kaggle Jobs</span>
                 <span>🤖 <strong id="crawlerCount">0</strong> Crawler Jobs</span>
                 <span>📊 <strong id="totalCount">0</strong> Tổng cộng</span>
             </div>
@@ -955,7 +955,7 @@
                 <div class="sidebar-card-header">📊 Thống kê</div>
                 <div class="sidebar-card-body">
                     <div class="stat-item">
-                        <span>Legacy Jobs</span>
+                        <span>Kaggle Jobs</span>
                         <span class="stat-value" id="sidebarLegacy">-</span>
                     </div>
                     <div class="stat-item">
@@ -1384,7 +1384,7 @@
             const location = isCrawler ? (s.location || s.location_city?.join(', ') || 'N/A') : (s["Tỉnh thành tuyển dụng"] || s["Địa điểm tuyển dụng"] || 'N/A');
             const salary = isCrawler ? (s.salary || 'Thỏa thuận') : (s["Mức lương"] || 'Thỏa thuận');
             const exp = isCrawler ? (s.experience || '') : (s["Kinh nghiệm"] || '');
-            const source = isCrawler ? (s.source || 'Crawler') : 'Legacy';
+            const source = isCrawler ? (s.source || 'Crawler') : 'Kaggle';
 
             // Additional crawler fields
             const workType = isCrawler ? s.work_type : null;

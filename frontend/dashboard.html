@@ -359,7 +359,7 @@
                     <span class="stat-icon primary">📁</span>
                 </div>
                 <div class="stat-value" id="legacyCount">-</div>
-                <div class="stat-label">Legacy Jobs</div>
+                <div class="stat-label">Kaggle Jobs</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-header">
@@ -401,7 +401,7 @@
         <!-- Tabs -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('overview')">📊 Tổng quan</button>
-            <button class="tab-btn" onclick="switchTab('legacy')">📁 Legacy Data</button>
+            <button class="tab-btn" onclick="switchTab('legacy')">📁 Kaggle Data</button>
             <button class="tab-btn" onclick="switchTab('crawler')">🤖 Crawler Data</button>
             <button class="tab-btn" onclick="switchTab('salary')">💰 Lương</button>
         </div>
@@ -410,7 +410,7 @@
         <div id="tab-overview" class="tab-content active">
             <div class="charts-grid">
                 <div class="chart-card">
-                    <div class="chart-card-header">📍 Top Tỉnh thành (Legacy)</div>
+                    <div class="chart-card-header">📍 Top Tỉnh thành (Kaggle)</div>
                     <div class="chart-card-body">
                         <div class="chart-container">
                             <canvas id="legacyLocationChart"></canvas>
@@ -434,7 +434,7 @@
                     </div>
                 </div>
                 <div class="chart-card">
-                    <div class="chart-card-header">👔 Kinh nghiệm (Legacy)</div>
+                    <div class="chart-card-header">👔 Kinh nghiệm (Kaggle)</div>
                     <div class="chart-card-body">
                         <div class="chart-container">
                             <canvas id="legacyExpChart"></canvas>
@@ -466,7 +466,7 @@
             </div>
 
             <div class="data-table-card">
-                <div class="data-table-header">🏭 Top Ngành nghề (Legacy)</div>
+                <div class="data-table-header">🏭 Top Ngành nghề (Kaggle)</div>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -590,7 +590,7 @@
 
         <!-- Tab: Salary -->
         <div id="tab-salary" class="tab-content">
-            <h3 style="margin-bottom: 16px; color: var(--text-primary);">📁 Lương Legacy</h3>
+            <h3 style="margin-bottom: 16px; color: var(--text-primary);">📁 Lương Kaggle</h3>
             <div class="salary-stats-grid" id="legacySalaryStats">
                 <div class="salary-stat-item">
                     <div class="salary-stat-value">-</div>
@@ -611,7 +611,7 @@
             </div>
 
             <div class="chart-card" style="margin-bottom: 24px;">
-                <div class="chart-card-header">📊 Phân bố mức lương Legacy</div>
+                <div class="chart-card-header">📊 Phân bố mức lương Kaggle</div>
                 <div class="chart-card-body">
                     <div class="chart-container">
                         <canvas id="legacySalaryChart"></canvas>
