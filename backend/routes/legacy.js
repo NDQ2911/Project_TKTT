@@ -33,8 +33,8 @@ module.exports = function (esClient, esHost, indexName) {
                 ? {
                     bool: {
                         should: [
-                            { multi_match: { query: q, fields: SEARCH_FIELDS, boost: 10 } },
-                            { multi_match: { query: q, fields: SEARCH_FIELDS, fuzziness: "AUTO", boost: 1 } }
+                            { multi_match: { query: q, fields: SEARCH_FIELDS, boost: 0.8 } },
+                            { multi_match: { query: q, fields: SEARCH_FIELDS, fuzziness: "AUTO", boost: 0.2 } }
                         ]
                     }
                 }
@@ -71,8 +71,8 @@ module.exports = function (esClient, esHost, indexName) {
                 must.push({
                     bool: {
                         should: [
-                            { multi_match: { query: q, fields: SEARCH_FIELDS, boost: 10 } },
-                            { multi_match: { query: q, fields: SEARCH_FIELDS, fuzziness: "AUTO", boost: 1 } }
+                            { multi_match: { query: q, fields: SEARCH_FIELDS, boost: 0.8 } },
+                            { multi_match: { query: q, fields: SEARCH_FIELDS, fuzziness: "AUTO", boost: 0.2 } }
                         ]
                     }
                 });

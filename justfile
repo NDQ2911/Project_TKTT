@@ -54,3 +54,17 @@ test-http:
 
 test-sdk:
     curl -X POST http://localhost:3000/search/sdk -H "Content-Type: application/json" -d '{"q":"IT"}'
+
+# ============ Local Tunnel (cloudflared) ============
+# Expose backend to internet (port 3000)
+tunnel-be:
+    "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:3000
+
+# Expose frontend to internet (port 8080)
+tunnel-fe:
+    "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:8080
+
+# Expose both backend and frontend (run in parallel)
+tunnel-all:
+    "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:3000 &
+    "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:8080

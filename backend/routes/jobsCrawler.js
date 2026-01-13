@@ -6,7 +6,7 @@ const express = require('express');
 const router = express.Router();
 
 // Search fields config for crawler data (matching Go domain.Job)
-const SEARCH_FIELDS = ["title^3", "company^2", "location", "description", "requirements", "benefits", "skills"];
+const SEARCH_FIELDS = ["title^5", "company^2", "location", "description", "requirements", "benefits", "skills"];
 
 // Keyword fields available for aggregation
 const KEYWORD_FIELDS = {
@@ -51,6 +51,9 @@ module.exports = function (esClient, indexName) {
                     function_score: {
                         query: baseQuery,
                         functions: [
+                            {
+                                weight: 15
+                            },
                             {
                                 gauss: {
                                     created_at: {
@@ -217,20 +220,71 @@ module.exports = function (esClient, indexName) {
                 filter.push({ range: { salary_max: { lte: salary_max } } });
             }
 
-            const response = await esClient.search({
+            // Build base query with bool
+            const baseQuery = {
+                bool: {
+                    must: must.length > 0 ? must : [{ match_all: {} }],
+                    filter: filter
+                }
+            };
+
+            // Build search request with function_score for decay
+            const searchRequest = {
                 index: indexName,
                 query: {
-                    bool: {
-                        must: must.length > 0 ? must : [{ match_all: {} }],
-                        filter: filter
+                    function_score: {
+                        query: baseQuery,
+                        functions: [
+                            {
+                                weight: 15
+                            },
+                            {
+                                gauss: {
+                                    created_at: {
+                                        origin: "now",
+                                        scale: "30d",
+                                        offset: "7d",
+                                        decay: 0.5
+                                    }
+                                }
+                            }
+                        ],
+                        boost_mode: "sum",
+                        score_mode: "sum"
                     }
                 },
                 from: from,
-                size: size,
-                sort: [
-                    { crawled_at: { order: "desc" } }
-                ]
-            });
+                size: size
+            };
+
+            // Add phrase suggest if query is not empty
+            if (q && q.trim()) {
+                searchRequest.suggest = {
+                    text: q,
+                    "did-you-mean": {
+                        phrase: {
+                            field: "title.suggest",
+                            size: 1,
+                            gram_size: 2,
+                            confidence: 0.5,
+                            max_errors: 2,
+                            direct_generator: [{
+                                field: "title.suggest",
+                                suggest_mode: "always",
+                                min_word_length: 2
+                            }]
+                        }
+                    }
+                };
+            }
+
+            const response = await esClient.search(searchRequest);
+
+            // Extract phrase suggestion
+            const phraseSuggestions = response.suggest?.["did-you-mean"]?.[0]?.options || [];
+            const didYouMean = phraseSuggestions.length > 0 && phraseSuggestions[0].text !== q
+                ? phraseSuggestions[0].text
+                : null;
 
             res.json({
                 method: "advanced",
@@ -238,7 +292,8 @@ module.exports = function (esClient, indexName) {
                 page: page,
                 size: size,
                 total: response.hits.total.value,
-                hits: response.hits.hits
+                hits: response.hits.hits,
+                didYouMean: didYouMean
             });
         } catch (err) {
             console.error(err.message);

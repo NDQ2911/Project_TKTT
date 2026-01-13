@@ -63,7 +63,7 @@ services:
     environment:
       - REDIS_ADDR=redis:6379
       - CRAWLER_DELAY_MS=3
-      # - CRAWLER_VERBOSE_LOG=true
+      - CRAWLER_VERBOSE_LOG=true
 
     depends_on:
       redis:
